@@ -36,9 +36,22 @@ BUS_DST="$TARGET/docs/agent-collaboration"
 mkdir -p "$BUS_DST"
 # -n = no-clobber，已存在的不覆盖
 cp -Rn "$BUS_SRC/." "$BUS_DST/" 2>/dev/null || cp -R "$BUS_SRC/." "$BUS_DST/"
-echo "[init] ✓ 文件总线就位：$BUS_DST（已有文件未覆盖）。"
+echo "[init] ✓ 文件总线就位：${BUS_DST}（已有文件未覆盖）。"
 
-# 3) 提示后续（适配文件由配置向导生成，不在本脚本里硬写）
+# 3) CC skills —— 配置向导和触发器，拷到目标项目让 /setup-team 等可用
+SKILL_SRC="$FRAMEWORK_DIR/.claude/skills"
+SKILL_DST="$TARGET/.claude/skills"
+mkdir -p "$SKILL_DST"
+cp -Rn "$SKILL_SRC/." "$SKILL_DST/" 2>/dev/null || cp -R "$SKILL_SRC/." "$SKILL_DST/"
+echo "[init] ✓ CC skills 就位：${SKILL_DST}（/setup-team、/plan、/review、/sync）。"
+
+# 4) 生成器 —— /setup-team 第 3 步要调它
+CORE_DST="$TARGET/core"
+mkdir -p "$CORE_DST"
+cp -n "$FRAMEWORK_DIR/core/generate.py" "$CORE_DST/generate.py" 2>/dev/null || cp "$FRAMEWORK_DIR/core/generate.py" "$CORE_DST/generate.py"
+echo "[init] ✓ 生成器就位：${CORE_DST}/generate.py。"
+
+# 5) 提示后续（适配文件由配置向导生成，不在本脚本里硬写）
 cat <<'EOF'
 
 [init] 骨架铺设完成。接下来：
