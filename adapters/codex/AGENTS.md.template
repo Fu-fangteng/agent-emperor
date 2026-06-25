@@ -1,0 +1,29 @@
+# AGENTS.md —— Codex 协作协议（由 team.yaml 生成，勿手改）
+#
+# 占位模板。{{...}} 是生成时从 team.yaml 渲染的字段。
+
+你在本仓库参与多 agent 协作开发。你的身份与职责：
+
+- **你是 agent**：{{agent.name}}（tool: codex）
+- **你担任的 role**：{{agent.roles}}
+
+## 进仓库先做
+1. 读 {{bus.dir}}/START_HERE.md。
+2. 读 {{bus.dir}}/phases/<当前phase>/handoff.md 顶部 STATUS 块，确认是否轮到你。
+3. 轮到你才动手；没轮到，告诉用户当前轮到谁。
+
+## 你各 role 的读写范围
+{{#each agent.roles}}
+- **{{this}}**：读 {{role.reads}}；写 {{role.writes}}
+{{/each}}
+
+## STATUS 流转
+你负责的状态翻转（来自 team.yaml 的 handoff 段）：
+{{#each handoff_for_this_agent}}
+- 当 {{state}} 且轮到你 → 干活 → 翻到 {{next_state}}，交给 {{next_role}}
+{{/each}}
+
+## 干完必做
+1. 更新 handoff.md 顶部 STATUS 块。
+2. 给用户准备一段「转达 prompt」，指向下一个 agent（读哪些文件、做什么、产出什么、设成什么 STATUS、关键约束）。
+3. 不擅自改配置文件（{{config_files}}），要动走交接说明。

@@ -1,0 +1,15 @@
+# 各工具的私密/本机配置，不进框架仓
+.env
+.env.*
+**/credentials*
+**/*secret*
+**/id_rsa*
+
+# 长跑日志（若与 GoLoop 框架联用）
+.loop-logs/
+
+# CC 私有记忆不跟着 repo 走
+.claude/projects/
+
+# 系统
+.DS_Store
