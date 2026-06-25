@@ -106,3 +106,33 @@ bus:
 config_files:
   - config2.yaml
   - .benchmark_secrets.yaml
+
+# -----------------------------------------------------------------------------
+# anchor: 身份锚点。要求每个 agent 在每轮回复结尾固定加一句"身份签名"。
+#   - 锚点的【内核】永远是「<产品/增量> · <role>」，这才是身份本身。
+#   - 锚点的【外壳】由 style 决定，只是让它好认、好玩。
+#   作用有二：① 让模型时刻清楚自己是谁；② 当某轮回复没带锚点时，
+#   你一眼就知道它丢了上下文——可回它一句"你是谁？"把它拽回身份。
+#
+#   style 可选 10 种预设（generate.py 内置模板，改风格重跑生成器即可）：
+#     radio     电台呼号 over～        🦫 仅 stamp/cat 用吉祥物
+#     stamp     打卡盖章 + role 吉祥物   ← 默认
+#     butler    管家侍从（蹭"主人"梗）
+#     save      游戏存档点
+#     chunni    中二宣言
+#     express   快递签收
+#     captain   航空机长广播
+#     cat       猫咪附体（卖萌）
+#     wuxia     武侠抱拳
+#     terminal  终端提示符（极客风）
+#
+#   role_emoji: 仅 style=stamp / cat 时生效，给每个 role 配一只吉祥物。
+#     未列出的 role 回退到 🐾。可自取，图个乐。
+# -----------------------------------------------------------------------------
+anchor:
+  style: stamp
+  role_emoji:
+    planner: 🦝
+    developer: 🦫
+    reviewer: 🦉
+    tester: 🐹

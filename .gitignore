@@ -13,3 +13,7 @@
 
 # 系统
 .DS_Store
+
+# Python 字节码
+__pycache__/
+*.pyc

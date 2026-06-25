@@ -31,6 +31,23 @@ except ImportError:
 KNOWN_TOOLS = {"claude-code", "codex", "cursor"}
 GENERATED_TOOLS = {"claude-code", "codex"}  # cursor 仍是占位，先不生成
 
+# 身份锚点的 10 种预设外壳。{id} 会被替换成「<产品/增量> · <role>」这个身份内核，
+# {emoji} 仅 stamp/cat 用（来自 anchor.role_emoji，缺省 🐾）。
+ANCHOR_STYLES = {
+    "radio":    "📻 这里是「{id}」，本轮完毕，over～",
+    "stamp":    "—— {emoji}「{id}」打卡下班，搬砖完毕。",
+    "butler":   "🎩 您的「{id}」已为您效劳完毕，主人。",
+    "save":     "💾 [{id}] 进度已保存，等待下一位玩家接棒。",
+    "chunni":   "⚔️ 以「{id}」之名，本轮承诺已兑现。",
+    "express":  "📦 「{id}」专递已送达，请签收～",
+    "captain":  "✈️ 机长「{id}」播报：本段航程结束，感谢搭乘。",
+    "cat":      "🐾 喵——{emoji}「{id}」干完活了，求摸头。",
+    "wuxia":    "🥋 在下「{id}」，本轮告一段落，告辞。",
+    "terminal": "[{id}] $ done ✓ — awaiting next handoff",
+}
+ANCHOR_USES_EMOJI = {"stamp", "cat"}
+DEFAULT_ROLE_EMOJI = "🐾"
+
 
 def load_team(path: Path) -> dict:
     if not path.is_file():
@@ -85,6 +102,12 @@ def validate(team: dict) -> list[str]:
         elif nxt not in role_set:
             errors.append(f"handoff 规则 state={state} 的 next_role='{nxt}' 未在 roles 声明。")
 
+    # anchor.style 必须是已知预设（缺 anchor 段时回退默认，不报错）
+    anchor = team.get("anchor") or {}
+    style = anchor.get("style", "stamp")
+    if style not in ANCHOR_STYLES:
+        errors.append(f"anchor.style='{style}' 未知（支持：{sorted(ANCHOR_STYLES)}）。")
+
     return errors
 
 
@@ -120,6 +143,36 @@ def handoff_for_agent(team: dict, agent: dict) -> list[dict]:
     return out
 
 
+def anchor_example(team: dict, role: str, product: str = "<本增量>") -> str:
+    """渲染某个 role 的锚点示例句（身份内核=product · role）。"""
+    anchor = team.get("anchor") or {}
+    style = anchor.get("style", "stamp")
+    tmpl = ANCHOR_STYLES.get(style, ANCHOR_STYLES["stamp"])
+    emoji = ""
+    if style in ANCHOR_USES_EMOJI:
+        role_emoji = anchor.get("role_emoji") or {}
+        emoji = role_emoji.get(role, DEFAULT_ROLE_EMOJI)
+    return tmpl.format(id=f"{product} · {role}", emoji=emoji)
+
+
+def render_anchor_lines(team: dict, agent: dict) -> list[str]:
+    """生成写进适配文件的「身份锚点」指令段。"""
+    lines = [
+        "## 身份锚点（每轮回复结尾必加）",
+        "",
+        "每轮回复的**最后一行**，固定加一句身份签名。格式：身份内核「<产品/增量> · <role>」套上固定外壳。",
+        "你担任的 role 各举一例（把 <本增量> 换成用户告诉你的产品/增量名）：",
+    ]
+    for r in agent.get("roles", []):
+        lines.append(f"- {r}：`{anchor_example(team, r)}`")
+    lines += [
+        "",
+        "规矩：身份内核（产品 · role）不能省，外壳别乱改。一旦你某轮忘了加这行，",
+        "就说明你可能丢了上下文——用户会回你「你是谁？」，届时重新声明身份并找回状态。",
+    ]
+    return lines
+
+
 # --------------------------------------------------------------------------
 # 渲染：Codex 的 AGENTS.md
 # --------------------------------------------------------------------------
@@ -151,6 +204,7 @@ def render_agents_md(team: dict, agent: dict) -> str:
             lines.append(f"- 当 STATUS={h.get('state')} 轮到你{gate} → 干活 → 完成后翻转到下一状态。")
     else:
         lines.append("- （无：你的 role 不在 handoff 的 next_role 中）")
+    lines += [""] + render_anchor_lines(team, agent)
     lines += [
         "",
         "## 干完必做",
@@ -189,6 +243,10 @@ def render_claude_md(team: dict, agent: dict) -> str:
         "- `/plan <想法>` —— planner：调研、写 requirements + plan，STATUS → PLAN_REVIEW",
         "- `/review` —— reviewer：按 STATUS 圈范围审 diff、跑测、按 P0-P3 写 review",
         "- `/sync` —— 读总线对齐状态，告诉用户轮到谁、下一步",
+        "",
+    ]
+    lines += render_anchor_lines(team, agent)
+    lines += [
         "",
         "## 干完必做",
         "1. 更新 handoff.md 顶部 STATUS 块。",

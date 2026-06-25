@@ -48,4 +48,11 @@ bus:
 config_files:
   - config2.yaml
   - .benchmark_secrets.yaml
+
+anchor:
+  style: stamp            # 打卡盖章 + role 吉祥物；10 种风格见 ../core/team.schema.yaml
+  role_emoji:
+    planner: 🦝
+    developer: 🦫
+    reviewer: 🦉
 ```
