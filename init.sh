@@ -43,7 +43,7 @@ SKILL_SRC="$FRAMEWORK_DIR/.claude/skills"
 SKILL_DST="$TARGET/.claude/skills"
 mkdir -p "$SKILL_DST"
 cp -Rn "$SKILL_SRC/." "$SKILL_DST/" 2>/dev/null || cp -R "$SKILL_SRC/." "$SKILL_DST/"
-echo "[init] ✓ CC skills 就位：${SKILL_DST}（/setup-team、/plan、/review、/sync）。"
+echo "[init] ✓ CC skills 就位：${SKILL_DST}（/setup-team、/whoami、/plan、/review、/sync）。"
 
 # 4) 生成器 —— /setup-team 第 3 步要调它
 CORE_DST="$TARGET/core"

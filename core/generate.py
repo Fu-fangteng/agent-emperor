@@ -173,6 +173,42 @@ def render_anchor_lines(team: dict, agent: dict) -> list[str]:
     return lines
 
 
+def render_checkin_lines(team: dict, agent: dict) -> list[str]:
+    """开场自检：接到转达 prompt 后，第一句先回执身份，证明已就位。"""
+    return [
+        "## 开场先自检（接到转达 prompt 的第一句）",
+        "",
+        "你被新开一个对话、收到一段「转达 prompt」时，**别闷头就干**。第一句先回执，让用户确认你已就位：",
+        "",
+        "> 收到。我是「<产品/增量> · <role>」，已读 START_HERE 和 handoff.md，当前 STATUS=<X>，"
+        "确认轮到我，开始干活。",
+        "",
+        "- 产品和 role 以转达 prompt 里指定的为准；STATUS 以 handoff.md 顶部为准。",
+        "- 若读完发现**没轮到你**（STATUS 不对、或轮到的是别的 role），别动手——直接说清当前轮到谁、该切到哪个 agent。",
+    ]
+
+
+def render_handoff_format_lines(team: dict) -> list[str]:
+    """交接三段式：我（已完成）→ 指向谁 → 待复制 prompt。"""
+    return [
+        "## 转达 prompt 的标准格式（三段式）",
+        "",
+        "干完活给用户的交接，必须是「我 + 指向 + 待复制 prompt」三段，方便用户一眼看懂、直接复制：",
+        "",
+        "```",
+        "✅ 我（<产品/增量> · <我的 role>）的活干完了：<一句话说清这轮产出>。",
+        "👉 请把下面这段复制给 <下一个 role>（新开一个对话）：",
+        "—————（复制从这里开始）—————",
+        "你是「<产品/增量> · <下一个 role>」。读 <要读的文件>，做 <要做的事>，",
+        "产出 <要产出什么>，完成后把 STATUS 设成 <目标状态>。约束：<边界、不能动的文件>。",
+        "—————（复制到这里结束）—————",
+        "```",
+        "",
+        "下一个 role 是谁，按 team.yaml 的 handoff 交接逻辑确定。流程收尾（next_role 为空）时，",
+        "把第二、三段换成「本增量到此收尾，建议 commit 并归档」。",
+    ]
+
+
 # --------------------------------------------------------------------------
 # 渲染：Codex 的 AGENTS.md
 # --------------------------------------------------------------------------
@@ -185,6 +221,10 @@ def render_agents_md(team: dict, agent: dict) -> str:
         "",
         f"你在本仓库参与多 agent 协作开发。你是 agent **{agent.get('name')}**（tool: codex）。",
         f"你担任的 role：**{', '.join(agent.get('roles', []))}**。",
+        "",
+    ]
+    lines += render_checkin_lines(team, agent)
+    lines += [
         "",
         "## 进仓库先做",
         f"1. 读 `{bus_dir}/START_HERE.md`。",
@@ -205,12 +245,12 @@ def render_agents_md(team: dict, agent: dict) -> str:
     else:
         lines.append("- （无：你的 role 不在 handoff 的 next_role 中）")
     lines += [""] + render_anchor_lines(team, agent)
+    lines += [""] + render_handoff_format_lines(team)
     lines += [
         "",
         "## 干完必做",
         "1. 更新 handoff.md 顶部 STATUS 块（状态、轮到谁、更新时间）。",
-        "2. 给用户准备一段「转达 prompt」，指向下一个 agent：读哪些文件、做什么、",
-        "   产出什么、设成什么 STATUS、关键约束（边界、不能动的文件）。",
+        "2. 按上面的三段式给用户准备「转达 prompt」，指向下一个 agent。",
         f"3. 不擅自改配置文件（{cfgs}），要动走交接说明。",
         "",
     ]
@@ -232,6 +272,10 @@ def render_claude_md(team: dict, agent: dict) -> str:
         "",
         f"开始任何任务前，读 `{bus_dir}/START_HERE.md` 和当前 phase 的 handoff.md STATUS 块，确认是否轮到你。",
         "",
+    ]
+    lines += render_checkin_lines(team, agent)
+    lines += [
+        "",
         "## 你各 role 的读写范围",
     ]
     for r in agent.get("roles", []):
@@ -240,17 +284,19 @@ def render_claude_md(team: dict, agent: dict) -> str:
     lines += [
         "",
         "## 可用触发器（skill）",
+        "- `/whoami` —— 当场自检：报我担任什么 role、是否轮到我、当前 STATUS、下一步",
         "- `/plan <想法>` —— planner：调研、写 requirements + plan，STATUS → PLAN_REVIEW",
         "- `/review` —— reviewer：按 STATUS 圈范围审 diff、跑测、按 P0-P3 写 review",
         "- `/sync` —— 读总线对齐状态，告诉用户轮到谁、下一步",
         "",
     ]
     lines += render_anchor_lines(team, agent)
+    lines += [""] + render_handoff_format_lines(team)
     lines += [
         "",
         "## 干完必做",
         "1. 更新 handoff.md 顶部 STATUS 块。",
-        "2. 给用户准备一段「转达 prompt」指向下一个 agent。",
+        "2. 按上面的三段式给用户准备「转达 prompt」指向下一个 agent。",
         f"3. 不擅自改配置文件（{cfgs}）。一个 role 一个独立对话，保上下文干净。",
         "",
     ]
