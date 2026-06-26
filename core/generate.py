@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-generate.py —— 多 Agent 协作框架的适配文件生成器（A 方案：生成式）
+generate.py —— Agent Emperor 多 Agent 协作框架的适配文件生成器（A 方案：生成式）
 
 读项目根的 team.yaml，校验编制合法性，然后为每个 agent 的工具生成它原生吃的
 适配文件（CC 的 CLAUDE.md 协作段、Codex 的 AGENTS.md），并铺好文件总线。

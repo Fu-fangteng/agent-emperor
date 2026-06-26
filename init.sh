@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# init.sh —— 把多 Agent 协作框架铺进一个【已有项目】
+# init.sh —— 把 Agent Emperor（多 Agent 协作框架）铺进一个【已有项目】
 #
 # 新项目用 GitHub "Use this template" 即可；本脚本解决"老项目就地加装"。
 # 做的事：把 core 的总线模板和 team.yaml 默认值拷进目标项目，提示下一步。
