@@ -183,7 +183,7 @@ def handoff_for_agent(team: dict, agent: dict) -> list[dict]:
     return out
 
 
-def anchor_example(team: dict, role: str, product: str = "<本增量>") -> str:
+def anchor_example(team: dict, role: str, product: str) -> str:
     """渲染某个 role 的锚点示例句（身份内核=product · role）。"""
     anchor = team.get("anchor") or {}
     style = anchor.get("style", "stamp")
