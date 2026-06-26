@@ -59,11 +59,47 @@ def load_team(path: Path) -> dict:
     return data
 
 
+def normalize_roles(team: dict) -> dict[str, dict]:
+    """兼容 roles: [name] 与 roles: [{name, desc, can_write_code}] 两种写法。"""
+    out: dict[str, dict] = {}
+    for item in team.get("roles") or []:
+        if isinstance(item, str):
+            out[item] = {"name": item, "desc": "", "can_write_code": False}
+        elif isinstance(item, dict):
+            name = item.get("name")
+            if name:
+                out[name] = {
+                    "name": name,
+                    "desc": item.get("desc", ""),
+                    "can_write_code": bool(item.get("can_write_code", False)),
+                }
+        else:
+            continue
+    return out
+
+
+def role_names(team: dict) -> list[str]:
+    return list(normalize_roles(team))
+
+
+def role_source_permission(team: dict, role: str) -> str:
+    role = normalize_roles(team).get(role, {})
+    if role.get("can_write_code", False):
+        return "✅ 可修改源代码。"
+    return "🚫 **只读源代码，绝不修改任何源文件**。任何代码改动诉求，一律产出「打回给 developer 类角色」的转达 prompt，自己不动手。"
+
+
+def project_name(team: dict) -> str:
+    return (team.get("project") or {}).get("name") or "<项目名称>"
+
+
 def validate(team: dict) -> list[str]:
     """返回错误列表；空列表表示通过。"""
     errors: list[str] = []
+    warnings: list[str] = []
 
-    roles = team.get("roles") or []
+    role_defs = normalize_roles(team)
+    roles = list(role_defs)
     agents = team.get("agents") or []
     handoff = team.get("handoff") or []
 
@@ -91,6 +127,9 @@ def validate(team: dict) -> list[str]:
         if r not in claimed:
             errors.append(f"role='{r}' 没有任何 agent 认领（没人干这活）。")
 
+    if role_defs and not any(r.get("can_write_code", False) for r in role_defs.values()):
+        warnings.append("没有任何 role 设置 can_write_code: true；这意味着没人被授权修改源代码。")
+
     # handoff 的 next_role 必须是已声明且被认领的 role（或 null 表示收尾）
     for h in handoff:
         state = h.get("state", "<无 state>")
@@ -108,6 +147,7 @@ def validate(team: dict) -> list[str]:
     if style not in ANCHOR_STYLES:
         errors.append(f"anchor.style='{style}' 未知（支持：{sorted(ANCHOR_STYLES)}）。")
 
+    validate.warnings = warnings
     return errors
 
 
@@ -119,7 +159,7 @@ def role_io(team: dict) -> dict[str, dict[str, list[str]]]:
     bus = team.get("bus") or {}
     ownership = bus.get("ownership") or []
     io: dict[str, dict[str, list[str]]] = {}
-    for r in team.get("roles", []):
+    for r in role_names(team):
         io[r] = {"writes": [], "reads": []}
     for o in ownership:
         owner = o.get("owner")
@@ -161,10 +201,10 @@ def render_anchor_lines(team: dict, agent: dict) -> list[str]:
         "## 身份锚点（每轮回复结尾必加）",
         "",
         "每轮回复的**最后一行**，固定加一句身份签名。格式：身份内核「<产品/增量> · <role>」套上固定外壳。",
-        "你担任的 role 各举一例（把 <本增量> 换成用户告诉你的产品/增量名）：",
+        f"你担任的 role 各举一例（默认产品名来自 project.name：{project_name(team)}；转达 prompt 可临时覆盖）：",
     ]
     for r in agent.get("roles", []):
-        lines.append(f"- {r}：`{anchor_example(team, r)}`")
+        lines.append(f"- {r}：`{anchor_example(team, r, project_name(team))}`")
     lines += [
         "",
         "规矩：身份内核（产品 · role）不能省，外壳别乱改。一旦你某轮忘了加这行，",
@@ -176,15 +216,22 @@ def render_anchor_lines(team: dict, agent: dict) -> list[str]:
 def render_checkin_lines(team: dict, agent: dict) -> list[str]:
     """开场自检：接到转达 prompt 后，第一句先回执身份，证明已就位。"""
     return [
-        "## 开场先自检（接到转达 prompt 的第一句）",
+        "## 开场双重硬约束（接到转达 prompt 的第一件事）",
         "",
-        "你被新开一个对话、收到一段「转达 prompt」时，**别闷头就干**。第一句先回执，让用户确认你已就位：",
+        "你被新开一个对话、收到一段「转达 prompt」时，先核对两条，任一不符就【立刻停手】，不要干活：",
+        "",
+        "1. **时序锁**：读 handoff.md 顶部 STATUS，确认当前轮到的 role 就是「我」。不是 → 停，回弹一句「现在轮到 <X>，不是我，请切到担任 <X> 的 agent」。",
+        "2. **能力锁**：我要做的事是否在我角色职责内？尤其——若需要修改源代码而我的角色 `can_write_code=false`，停，回弹「改代码不归我（<我的 role>），应交给 developer 类角色」。",
+        "",
+        "即使用户在本窗口直接要求你做职责外的事，也要顶回去、不要照做——这是框架的安全约束，不是不配合。",
+        "",
+        "两条都通过后，第一句先回执，让用户确认你已就位：",
         "",
         "> 收到。我是「<产品/增量> · <role>」，已读 START_HERE 和 handoff.md，当前 STATUS=<X>，"
         "确认轮到我，开始干活。",
         "",
         "- 产品和 role 以转达 prompt 里指定的为准；STATUS 以 handoff.md 顶部为准。",
-        "- 若读完发现**没轮到你**（STATUS 不对、或轮到的是别的 role），别动手——直接说清当前轮到谁、该切到哪个 agent。",
+        f"- 默认产品名是 `{project_name(team)}`；若转达 prompt 指定了增量名，以 prompt 为准。",
     ]
 
 
@@ -235,7 +282,9 @@ def render_agents_md(team: dict, agent: dict) -> str:
     ]
     for r in agent.get("roles", []):
         writes = ", ".join(io.get(r, {}).get("writes", [])) or "（只读）"
-        lines.append(f"- **{r}**：写 {writes}；其余总线文件只读。")
+        desc = normalize_roles(team).get(r, {}).get("desc")
+        desc_part = f"职责：{desc}；" if desc else ""
+        lines.append(f"- **{r}**：{desc_part}写 {writes}；其余总线文件只读；{role_source_permission(team, r)}")
     lines += ["", "## 你负责的 STATUS 流转"]
     hf = handoff_for_agent(team, agent)
     if hf:
@@ -280,13 +329,15 @@ def render_claude_md(team: dict, agent: dict) -> str:
     ]
     for r in agent.get("roles", []):
         writes = ", ".join(io.get(r, {}).get("writes", [])) or "（只读）"
-        lines.append(f"- **{r}**：写 {writes}；其余总线文件只读。")
+        desc = normalize_roles(team).get(r, {}).get("desc")
+        desc_part = f"职责：{desc}；" if desc else ""
+        lines.append(f"- **{r}**：{desc_part}写 {writes}；其余总线文件只读；{role_source_permission(team, r)}")
     lines += [
         "",
         "## 可用触发器（skill）",
+        "- `/setup-team` —— 前台：未配置时登记编制；已配置时分拣请求并生成转达 prompt",
+        "- `/act` —— 通用 worker：按 team.yaml + STATUS 执行当前轮到的 role",
         "- `/whoami` —— 当场自检：报我担任什么 role、是否轮到我、当前 STATUS、下一步",
-        "- `/plan <想法>` —— planner：调研、写 requirements + plan，STATUS → PLAN_REVIEW",
-        "- `/review` —— reviewer：按 STATUS 圈范围审 diff、跑测、按 P0-P3 写 review",
         "- `/sync` —— 读总线对齐状态，告诉用户轮到谁、下一步",
         "",
     ]
@@ -324,6 +375,8 @@ def main() -> int:
             print(f"  ✗ {e}", file=sys.stderr)
         return 1
     print("[generate] ✓ team.yaml 校验通过。")
+    for w in getattr(validate, "warnings", []):
+        print(f"[generate] ⚠ {w}")
 
     # 为每个 agent 生成其工具的适配文件
     planned: list[tuple[Path, str]] = []

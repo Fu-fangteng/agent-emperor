@@ -6,9 +6,9 @@
 
 ---
 
-## 默认状态机（plan → dev → review → 归档）
+## 示例状态机（plan → dev → review → 归档）
 
-对应默认编制（planner / developer / reviewer 三角色）。
+对应示例编制（planner / developer / reviewer 三角色）。这不是框架内建标准；角色不同则状态机不同，以项目根 `team.yaml` 的 `handoff` 段为准。
 
 ```mermaid
 stateDiagram-v2
@@ -64,5 +64,5 @@ commit范围: <git 策略；或以下方修改范围圈定>
 改 `team.yaml` 的 `roles` 和 `handoff` 段即可裁剪：
 
 - **加 tester**：在 `roles` 加 `tester`，在 `handoff` 插入如 `DEV_DONE → tester`（先测）、`TEST_PASSED → reviewer`、`TEST_FAILED → developer`。
-- **去掉 planner**（小改动直接开发）：删 `PLANNING / PLAN_* ` 相关行，让流程从 `DEV_DONE` 起步。
+- **去掉 planner**（小改动直接开发）：删 `PLANNING / PLAN_* ` 相关行，让流程从你定义的第一个状态起步，例如 `DEV_READY → developer`。
 - **规则**：每个 `next_role` 必须是 `roles` 里声明过、且被某个 agent 认领的 role。改完重新生成各工具适配文件。

@@ -9,7 +9,7 @@
 
 | 工具 | 原生读什么 | 适配壳产物 |
 | :--- | :--- | :--- |
-| Claude Code | `.claude/skills/`、CLAUDE.md | 配置向导 skill + /plan /review /sync 触发器 |
+| Claude Code | `.claude/skills/`、CLAUDE.md | 前台 skill + /act /whoami /sync 触发器 |
 | Codex | 仓库顶层 `AGENTS.md` | 一份 AGENTS.md，写明它担任的 role 怎么干 |
 | Cursor | `.cursorrules` 等 | 占位，待接入 |
 

@@ -10,11 +10,11 @@
 ## 进仓库先做
 1. 读 {{bus.dir}}/START_HERE.md。
 2. 读 {{bus.dir}}/phases/<当前phase>/handoff.md 顶部 STATUS 块，确认是否轮到你。
-3. 轮到你才动手；没轮到，告诉用户当前轮到谁。
+3. 先过时序锁和能力锁；任一不符立刻停手并回弹原因。
 
 ## 你各 role 的读写范围
 {{#each agent.roles}}
-- **{{this}}**：读 {{role.reads}}；写 {{role.writes}}
+- **{{this}}**：读 {{role.reads}}；写 {{role.writes}}；源码权限 {{role.can_write_code}}
 {{/each}}
 
 ## STATUS 流转

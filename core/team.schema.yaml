@@ -10,7 +10,8 @@
 # 本文件有两个作用：
 #   1. 文档化 team.yaml 的合法字段、取值、约束（见下方注释）。
 #   2. 提供一份开箱即用的默认编制（DEFAULT，即下方实际 YAML 内容），
-#      对应作者本地验证过的 CC(plan+review) + Codex(dev) 这套。
+#      下方 planner/developer/reviewer 只是一份示例编制，你可以整套删掉
+#      换成自己的角色，框架不绑定任何固定角色。
 #      新项目可直接复制本文件为 team.yaml 后按需改。
 #
 # 改了 team.yaml 后，必须重新运行生成命令，让各工具适配文件同步更新。
@@ -22,7 +23,8 @@
 version: 1
 
 # -----------------------------------------------------------------------------
-# project: 项目级元信息。name 用于日志/归档命名；repos 声明这个项目的代码
+# project: 项目级元信息。name 用于日志/归档命名，也作为身份锚点
+#          「<产品/增量> · <role>」里的默认产品名来源；repos 声明这个项目的代码
 #          散落在哪些仓库（跑测链路可能跨多个仓，审查方据此圈定 diff 范围）。
 # -----------------------------------------------------------------------------
 project:
@@ -32,7 +34,14 @@ project:
 
 # -----------------------------------------------------------------------------
 # roles: 这个项目启用哪几个 role（角色 = 要干的活，与具体工具无关）。
-#   预置 role 见 core/status-machine/ 的状态机定义。常用四种：
+#   下方 planner/developer/reviewer 只是一份示例编制，你可以整套删掉
+#   换成自己的角色，框架不绑定任何固定角色。
+#   推荐写成对象列表，每个 role 可声明：
+#     name            角色名，自由字符串
+#     desc            一句话职责描述
+#     can_write_code  是否允许修改源代码；默认 false
+#   兼容旧写法：纯字符串视为 {name: <字符串>, can_write_code: false}。
+#   常见示例 role：
 #     planner   —— 写需求和方案（requirements.md / plan.md）
 #     developer —— 改代码、跑验证、写交接（handoff.md）
 #     reviewer  —— 审 diff、按 P0-P3 写意见（review.md）
@@ -40,9 +49,15 @@ project:
 #   你可以只用其中几个。role 名称必须与 handoff 段、agents 段引用的一致。
 # -----------------------------------------------------------------------------
 roles:
-  - planner
-  - developer
-  - reviewer
+  - name: planner
+    desc: 写需求和方案，明确范围、验收标准和实施计划
+    can_write_code: false
+  - name: developer
+    desc: 修改源代码、运行验证、维护交接说明
+    can_write_code: true
+  - name: reviewer
+    desc: 独立审查 diff 和测试结果，输出 P0-P3 findings
+    can_write_code: false
 
 # -----------------------------------------------------------------------------
 # agents: 你实际开几个 AI 客户端，以及每个客户端担任哪些 role。
@@ -70,7 +85,8 @@ agents:
 #   - human_gate: 是否需要人工在此节点审查/裁决后才推进（true/false）。
 #                 这是"人工编排"的体现：每个 human_gate=true 的节点，
 #                 同时是一个审查点 + commit 点 + 交接点。
-#   下方是默认编制（plan → dev → review → 归档）的标准状态流转。
+#   下方是示例编制（plan → dev → review → 归档）的状态流转。
+#   如果角色不同，状态机也应随之调整，以本段为准。
 # -----------------------------------------------------------------------------
 handoff:
   - { state: PLANNING,           next_role: planner,    human_gate: false }

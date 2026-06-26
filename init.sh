@@ -9,10 +9,16 @@
 # 用法：
 #   ./init.sh /path/to/your/existing/project
 #   ./init.sh                      # 默认铺到当前目录
+#   ./init.sh --upgrade /path/to/project
 #
 set -euo pipefail
 
 FRAMEWORK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+UPGRADE=0
+if [[ "${1:-}" == "--upgrade" ]]; then
+  UPGRADE=1
+  shift
+fi
 TARGET="${1:-$(pwd)}"
 
 if [[ ! -d "$TARGET" ]]; then
@@ -21,6 +27,44 @@ fi
 
 echo "[init] 框架源：$FRAMEWORK_DIR"
 echo "[init] 铺设到：$TARGET"
+
+if [[ "$UPGRADE" == "1" ]]; then
+  MANIFEST="$FRAMEWORK_DIR/core/framework-manifest.txt"
+  if [[ ! -f "$MANIFEST" ]]; then
+    echo "[init] 找不到框架清单：$MANIFEST"; exit 1
+  fi
+  cat <<'EOF'
+[init] upgrade 模式会镜像覆盖框架层文件，并删除目标中已废弃的旧框架文件。
+[init] 建议你先 commit 当前工作，便于回滚。实例层文件不会被触碰：
+[init] team.yaml、业务代码、素材、phases 产物、.gitignore、本机配置等。
+EOF
+
+  while IFS= read -r rel || [[ -n "$rel" ]]; do
+    [[ -z "$rel" || "$rel" =~ ^# ]] && continue
+    src="$FRAMEWORK_DIR/$rel"
+    dst="$TARGET/$rel"
+    if [[ -e "$src" ]]; then
+      mkdir -p "$(dirname "$dst")"
+      cp -R "$src" "$dst"
+      echo "[init] ✓ 更新 $rel"
+    elif [[ -e "$dst" ]]; then
+      rm -rf "$dst"
+      echo "[init] ✓ 删除废弃 $rel"
+    fi
+  done < "$MANIFEST"
+
+  for old in \
+    ".claude/skills/plan" ".claude/skills/review" \
+    ".agents/skills/plan" ".agents/skills/review"; do
+    if [[ -e "$TARGET/$old" ]]; then
+      rm -rf "$TARGET/$old"
+      echo "[init] ✓ 删除废弃 $old"
+    fi
+  done
+
+  echo "[init] 升级完成。建议运行 /setup-team 检查旧 team.yaml，并重跑 python3 core/generate.py。"
+  exit 0
+fi
 
 # 1) team.yaml —— 不覆盖已有的
 if [[ -f "$TARGET/team.yaml" ]]; then
@@ -43,7 +87,7 @@ SKILL_SRC="$FRAMEWORK_DIR/.claude/skills"
 SKILL_DST="$TARGET/.claude/skills"
 mkdir -p "$SKILL_DST"
 cp -Rn "$SKILL_SRC/." "$SKILL_DST/" 2>/dev/null || cp -R "$SKILL_SRC/." "$SKILL_DST/"
-echo "[init] ✓ CC skills 就位：${SKILL_DST}（/setup-team、/whoami、/plan、/review、/sync）。"
+echo "[init] ✓ CC skills 就位：${SKILL_DST}（/setup-team、/act、/whoami、/sync）。"
 
 # 4) 生成器 —— /setup-team 第 3 步要调它
 CORE_DST="$TARGET/core"

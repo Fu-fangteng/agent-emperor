@@ -14,9 +14,15 @@ project:
     - ../MetaGPT         # 跑测链路跨的第二个仓（通过 METAGPT_ROOT 注入）
 
 roles:
-  - planner
-  - developer
-  - reviewer
+  - name: planner
+    desc: 写需求和方案，明确范围、验收标准和实施计划
+    can_write_code: false
+  - name: developer
+    desc: 修改源代码、运行验证、维护交接说明
+    can_write_code: true
+  - name: reviewer
+    desc: 独立审查 diff 和测试结果，输出 P0-P3 findings
+    can_write_code: false
 
 agents:
   - name: cc

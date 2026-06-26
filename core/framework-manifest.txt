@@ -1,0 +1,13 @@
+core/generate.py
+core/team.schema.yaml
+core/bus-templates/README.md
+core/bus-templates/START_HERE.md
+core/status-machine/README.md
+.claude/skills/act/SKILL.md
+.claude/skills/setup-team/SKILL.md
+.claude/skills/sync/SKILL.md
+.claude/skills/whoami/SKILL.md
+.agents/skills/act/SKILL.md
+.agents/skills/setup-team/SKILL.md
+.agents/skills/sync/SKILL.md
+.agents/skills/whoami/SKILL.md
