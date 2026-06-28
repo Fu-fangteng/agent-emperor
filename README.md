@@ -332,10 +332,11 @@ agent-emperor/
 ├─ index.html            # 产品官网展示页(GitHub Pages 渲染目标,见下)
 ├─ logo.png              # 官网展示页用的素材(克隆框架时可删)
 ├─ logo-optimized.webp   # 同上
-└─ avatar-optimized.webp # 同上
+├─ avatar-optimized.webp # 同上
+└─ bg-optimized.webp     # 同上(首屏宫廷赛博背景)
 ```
 
-> 📺 **关于仓库根的 `index.html` 和三张图**:这是 Agent Emperor 的**产品官网展示页**,GitHub Pages 直接渲染——访客打开 repo 的 Pages 域名就能看到这套框架的可视化介绍。它本身是用这套框架(planner/developer/reviewer 接力)dogfood 做出来的真实案例。
+> 📺 **关于仓库根的 `index.html` 和那几张图**:这是 Agent Emperor 的**产品官网展示页**,GitHub Pages 直接渲染——访客打开 repo 的 Pages 域名就能看到这套框架的可视化介绍。它本身是用这套框架(planner/developer/reviewer 接力)dogfood 做出来的真实案例。
 >
 > 如果你只是**拿这个 repo 当框架模板**(`init.sh` 装到你自己项目里、或 `Use this template` 新建项目),这几个文件**可以直接删**——它们不是框架运行的一部分,只是父类自己的官网。
 
