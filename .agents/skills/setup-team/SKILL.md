@@ -30,8 +30,10 @@ description: Front desk for this multi-agent framework. If team.yaml is missing,
 3. agents：几个窗口、分别用什么工具（支持 `claude-code`、`codex`，`cursor` 暂占位）。
 4. 每个 agent 担任哪些 roles。
 5. handoff 完整性：问清起点状态、每个状态轮到哪个 role、哪个状态收尾（`next_role: null`）、哪些节点 `human_gate=true`。每个 role 干完要流向哪里必须明确。
-6. repos 和 config_files：涉及仓库、受保护配置文件。
-7. anchor 风格：10 选 1，推荐 `stamp`。
+6. bus.ownership 同步:用了非默认角色(没用 planner/developer/reviewer)时,引导用户把 `bus.ownership[].owner` 也改成新角色名,并询问是否要重命名总线文件(`plan.md` → `design.md` 之类),保持语义一致。
+7. anchor.role_emoji 同步:如果用户用了新角色名,提示给新角色挑一只吉祥物(默认会回退到 🐾)。
+8. repos 和 config_files：涉及仓库、受保护配置文件(无可整段留空数组)。
+9. anchor 风格：10 选 1，推荐 `stamp`。
 
 锚点风格示例：
 

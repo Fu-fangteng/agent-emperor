@@ -27,6 +27,21 @@ if [[ ! -d "$TARGET" ]]; then
   echo "[init] 目标目录不存在：$TARGET"; exit 1
 fi
 
+# 防呆:不允许在框架自身目录铺设(常见误用)。--upgrade 模式合法(就是要更新自己,虽然罕见)。
+TARGET_ABS="$(cd "$TARGET" && pwd)"
+if [[ "$UPGRADE" == "0" && "$TARGET_ABS" == "$FRAMEWORK_DIR" ]]; then
+  cat >&2 <<EOF
+[init] ⚠ 看起来你在框架自身目录跑 ./init.sh,这通常是错的。
+[init]   Agent Emperor 是模板,不是项目本身——在父类目录跑 init,所有框架文件
+[init]   都"已存在被跳过",你什么也装不到。
+[init]
+[init] 正确做法二选一:
+[init]   1. 用 GitHub "Use this template" 新建一个项目 repo
+[init]   2. 跑:  ./init.sh /path/to/your-project-dir
+EOF
+  exit 1
+fi
+
 MANIFEST="$FRAMEWORK_DIR/core/framework-manifest.txt"
 if [[ ! -f "$MANIFEST" ]]; then
   echo "[init] 找不到框架清单：$MANIFEST"; exit 1

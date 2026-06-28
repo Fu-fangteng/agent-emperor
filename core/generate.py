@@ -157,6 +157,15 @@ def validate(team: dict) -> list[str]:
     if style not in ANCHOR_STYLES:
         errors.append(f"anchor.style='{style}' 未知（支持：{sorted(ANCHOR_STYLES)}）。")
 
+    # anchor.role_emoji 引用的 key 必须是已声明 role
+    role_emoji = anchor.get("role_emoji") or {}
+    for emoji_role in role_emoji:
+        if emoji_role not in role_set:
+            warnings.append(
+                f"anchor.role_emoji 引用了未声明的 role='{emoji_role}'（roles 段没有）;"
+                f"该 emoji 不会被使用,建议删除或改成你声明过的 role 名。"
+            )
+
     validate.warnings = warnings
     return errors
 
