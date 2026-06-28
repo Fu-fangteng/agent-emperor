@@ -1,5 +1,6 @@
 core/generate.py
 core/team.schema.yaml
+core/framework-manifest.txt
 core/bus-templates/README.md
 core/bus-templates/START_HERE.md
 core/status-machine/README.md
