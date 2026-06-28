@@ -1,7 +1,7 @@
-<!-- 归属：reviewer 独占。按 P0-P3 分级写意见。 -->
+<!-- 归属：本文件的 owner role 独占(以 team.yaml.bus.ownership 为准)。按 P0-P3 分级写意见。 -->
 # 审查意见 —— <增量一句话标题>
 
-> reviewer 填写。审查范围以 handoff.md 的「修改范围」圈定。
+> 本文件 owner role 填写。审查范围以 handoff.md 的「修改范围」圈定。
 
 ## 结论
 <APPROVED / CHANGES_REQUESTED，一句话总评>

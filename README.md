@@ -88,6 +88,8 @@ pip install pyyaml
 
 `init.sh` 会按 `core/framework-manifest.txt` 清单铺好骨架:`core/`(生成器 + schema + 模板)、`.claude/skills/` + `.agents/skills/`(四个触发器)、`docs/agent-collaboration/` 总线目录、`team.yaml` 默认模板。已存在的文件不覆盖。
 
+> ⚠️ **不要在 Agent Emperor 仓库自身里使用框架**。这个 repo 本身是**模板**(像 React 的 create-react-app 一样)。要么用 GitHub 的 "Use this template" 新建你的项目 repo,要么 clone 它后跑 `./init.sh /path/to/你自己的项目目录`。在父类 repo 里直接跑 `/setup-team`,前台会读到默认的 schema 当作"已配置",体验会跑偏。
+
 ### Step 1. 配团队(每个项目一次)
 
 用 Claude Code 在项目根目录新开一个对话,跑:
@@ -323,9 +325,17 @@ agent-emperor/
 ├─ .claude/skills/       # Claude Code 触发器:setup-team / act / whoami / sync
 ├─ .agents/skills/       # 上面四个的镜像(给读 .agents 的工具)
 ├─ examples/             # 一个填好 team.yaml 的样例
-├─ assets/               # 品牌素材(头像 / 横幅 / logo)
-└─ docs/                 # 设计原理(为什么这么做)
+├─ assets/               # 品牌素材(banner / 头像 / logo)
+├─ docs/                 # 设计原理(为什么这么做)
+├─ index.html            # 产品官网展示页(GitHub Pages 渲染目标,见下)
+├─ logo.png              # 官网展示页用的素材(克隆框架时可删)
+├─ logo-optimized.webp   # 同上
+└─ avatar-optimized.webp # 同上
 ```
+
+> 📺 **关于仓库根的 `index.html` 和三张图**:这是 Agent Emperor 的**产品官网展示页**,GitHub Pages 直接渲染——访客打开 repo 的 Pages 域名就能看到这套框架的可视化介绍。它本身是用这套框架(planner/developer/reviewer 接力)dogfood 做出来的真实案例。
+>
+> 如果你只是**拿这个 repo 当框架模板**(`init.sh` 装到你自己项目里、或 `Use this template` 新建项目),这几个文件**可以直接删**——它们不是框架运行的一部分,只是父类自己的官网。
 
 想了解"为什么这么设计",看 [`docs/DESIGN.md`](docs/DESIGN.md)。
 

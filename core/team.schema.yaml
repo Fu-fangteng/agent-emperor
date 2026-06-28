@@ -103,6 +103,10 @@ handoff:
 #   - ownership   : 每份文件谁能写、怎么写。避免两个 agent 同时改一份文件。
 #                   write="exclusive" 表示独占主笔；"append" 表示只能追加不改正文。
 #                   owner 用 role 名（不是 agent 名），因为归属跟着角色走。
+#   ⚠ 下方是示例编制（plan-dev-review）的 ownership 配置。如果你换了角色,
+#     必须同步改 owner 字段(比如 analyst/pentester/auditor 项目),保持
+#     ownership 引用的角色名都在上面 roles 列表里声明过——否则生成器只会
+#     按字面写进适配文件,运行时容易出"幻影角色"。
 #   详见 core/bus-templates/。
 # -----------------------------------------------------------------------------
 bus:

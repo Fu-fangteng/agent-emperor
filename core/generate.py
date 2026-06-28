@@ -141,6 +141,16 @@ def validate(team: dict) -> list[str]:
         elif nxt not in role_set:
             errors.append(f"handoff 规则 state={state} 的 next_role='{nxt}' 未在 roles 声明。")
 
+    # bus.ownership 的 owner 必须是已声明 role,或特殊关键字 "shared"
+    bus = team.get("bus") or {}
+    for o in bus.get("ownership") or []:
+        owner = o.get("owner")
+        f = o.get("file", "<无 file>")
+        if owner in (None, ""):
+            errors.append(f"bus.ownership 规则 file={f} 缺 owner 字段。")
+        elif owner != "shared" and owner not in role_set:
+            errors.append(f"bus.ownership 规则 file={f} 的 owner='{owner}' 未在 roles 声明(或不是 'shared')。")
+
     # anchor.style 必须是已知预设（缺 anchor 段时回退默认，不报错）
     anchor = team.get("anchor") or {}
     style = anchor.get("style", "stamp")

@@ -1,7 +1,7 @@
-<!-- 归属：developer 独占。顶部 STATUS 块是整套流程的指挥棒。 -->
+<!-- 归属：本文件的 owner role 独占(以 team.yaml.bus.ownership 为准)。顶部 STATUS 块是整套流程的指挥棒。 -->
 ## STATUS
-状态: PLANNING
-轮到: planner
+状态: <填入 team.yaml.handoff 的初始状态,通常是 v1 起手那条>
+轮到: <填入该状态对应的 next_role>
 commit范围: <git 策略；或以下方修改范围圈定>
 涉及仓库: <repos 之一或多个>
 更新: <YYYY-MM-DD> by <谁>
@@ -9,7 +9,7 @@ commit范围: <git 策略；或以下方修改范围圈定>
 ---
 
 ## 本轮做了什么
-<developer 填：一句话说清这轮改了什么>
+<一句话说清这轮改了什么>
 
 ## 修改范围（审查方按此圈定 diff）
 - <文件 1>  (<改了什么>)
