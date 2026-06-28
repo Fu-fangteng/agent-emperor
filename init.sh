@@ -80,7 +80,7 @@ while IFS= read -r rel || [[ -n "$rel" ]]; do
   dst="$TARGET/$rel"
   [[ ! -e "$src" ]] && continue
   if [[ -e "$dst" ]]; then
-    echo "[init] - 跳过 $rel（已存在）"
+    echo "[init] - 跳过 ${rel}（已存在）"
     continue
   fi
   mkdir -p "$(dirname "$dst")"
