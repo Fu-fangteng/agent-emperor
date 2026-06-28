@@ -3,7 +3,7 @@
 generate.py —— Agent Emperor 多 Agent 协作框架的适配文件生成器（A 方案：生成式）
 
 读项目根的 team.yaml，校验编制合法性，然后为每个 agent 的工具生成它原生吃的
-适配文件（CC 的 CLAUDE.md 协作段、Codex 的 AGENTS.md），并铺好文件总线。
+适配文件（CC 的 CLAUDE.md 协作段、Codex 的 AGENTS.md）。
 
 工具无关：本脚本只产出静态文件，不要求任何 agent 在运行时解析 yaml。
 改了 team.yaml 重新跑一遍即可，这一步本身就是"配置一次、确认无误再开跑"的确认节点。
@@ -380,6 +380,9 @@ def render_agents_md(team: dict, agents: list[dict]) -> str:
         "3. 轮到你才动手；没轮到，告诉用户当前轮到谁、该切到哪个 agent。",
         "",
         "## 你各 role 的读写范围",
+        "",
+        "所有 role 都可以在自己完成当前轮次后更新 `handoff.md` 顶部 STATUS 块；"
+        "`handoff.md` 正文仍按下面的 ownership 归属写。",
     ]
     for r in roles:
         writes = ", ".join(io.get(r, {}).get("writes", [])) or "（只读）"
@@ -433,6 +436,9 @@ def render_claude_md(team: dict, agents: list[dict]) -> str:
     lines += [
         "",
         "## 你各 role 的读写范围",
+        "",
+        "所有 role 都可以在自己完成当前轮次后更新 `handoff.md` 顶部 STATUS 块；"
+        "`handoff.md` 正文仍按下面的 ownership 归属写。",
     ]
     for r in roles:
         writes = ", ".join(io.get(r, {}).get("writes", [])) or "（只读）"

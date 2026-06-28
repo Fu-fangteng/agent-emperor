@@ -50,7 +50,7 @@ bus:
   ownership:
     - { file: requirements.md, owner: planner,   write: exclusive }
     - { file: plan.md,         owner: planner,   write: exclusive, note: "developer 只在「开发方反馈」段追加" }
-    - { file: handoff.md,      owner: developer, write: exclusive, note: "顶部带 STATUS 块" }
+    - { file: handoff.md,      owner: developer, write: exclusive, note: "正文由 developer 维护；顶部 STATUS 块由当前轮到的 role 更新" }
     - { file: review.md,       owner: reviewer,  write: exclusive }
     - { file: decisions.md,    owner: shared,    write: append,    note: "每条带 [名字 日期] 前缀" }
     - { file: rounds/INDEX.md, owner: shared,    write: append }

@@ -4,7 +4,7 @@
 #
 # 这是整套框架的唯一事实源（source of truth）。
 # 每个项目根目录有一份 team.yaml，定义这个项目用什么样的 agent 编制。
-# 工具适配层（CC 的 skill、Codex 的 AGENTS.md、Cursor 的配置）都从 team.yaml
+# 工具适配层（CC 的 skill、Codex 的 AGENTS.md）都从 team.yaml
 # **生成**（A 方案：生成式），不在工具里写死"谁当 reviewer"。
 #
 # 本文件有两个作用：
@@ -120,7 +120,7 @@ bus:
   ownership:
     - { file: requirements.md, owner: planner,   write: exclusive }
     - { file: plan.md,         owner: planner,   write: exclusive, note: "developer 只在「开发方反馈」段追加" }
-    - { file: handoff.md,      owner: developer, write: exclusive, note: "顶部带 STATUS 块" }
+    - { file: handoff.md,      owner: developer, write: exclusive, note: "正文由 developer 维护；顶部 STATUS 块由当前轮到的 role 更新" }
     - { file: review.md,       owner: reviewer,  write: exclusive }
     - { file: decisions.md,    owner: shared,    write: append,    note: "每条带 [名字 日期] 前缀" }
     - { file: rounds/INDEX.md, owner: shared,    write: append }

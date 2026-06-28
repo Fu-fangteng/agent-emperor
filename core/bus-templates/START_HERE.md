@@ -11,7 +11,7 @@
 
 | 你的 role | 读 | 写 |
 | :--- | :--- | :--- |
-| 任意 role | 以 `team.yaml.bus.ownership` 为准 | 只写 `owner=<你的 role>` 的文件；`owner=shared` 只能按 write 规则追加 |
+| 任意 role | 以 `team.yaml.bus.ownership` 为准 | 只写 `owner=<你的 role>` 的文件；当前轮到你时可更新 `handoff.md` 顶部 STATUS 块；`owner=shared` 只能按 write 规则追加 |
 
 源码权限以 `team.yaml.roles[].can_write_code` 为准：`false` 表示只读源码，绝不修改任何源文件。
 

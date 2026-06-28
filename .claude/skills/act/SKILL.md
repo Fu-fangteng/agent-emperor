@@ -27,6 +27,7 @@ description: Use when acting as the currently scheduled worker role in this mult
 通过双重硬约束后，按当前 role 的职责干活：
 
 - 写哪些总线文件：只写 `bus.ownership` 中 `owner=<当前 role>` 的文件。
+- STATUS 指挥棒例外：当前轮到的 role 干完后，可以更新 `handoff.md` 顶部 STATUS 块；`handoff.md` 正文仍按 ownership 归属写。
 - 源代码权限：只有当前 role 的 `can_write_code=true` 才能修改源代码。
 - 共享文件：`owner=shared` 且 `write=append` 的文件只追加，不改旧内容。
 - 配置文件：`config_files` 里的文件不擅自改，必须写进交接说明并让用户确认。

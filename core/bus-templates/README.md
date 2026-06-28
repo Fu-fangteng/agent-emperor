@@ -16,7 +16,7 @@ docs/agent-collaboration/
 │  └─ v1/                 # 一个 phase = 一份验收契约；大增量换契约就开 v2
 │     ├─ requirements.md  # 需求(示例编制中 planner 独占)
 │     ├─ plan.md          # 方案(示例编制中 planner 主笔,dev 只在反馈段追加)
-│     ├─ handoff.md       # 交接(示例编制中 developer 独占,顶部带 STATUS 块)
+│     ├─ handoff.md       # 交接(正文按 ownership 归属,顶部 STATUS 由当前轮到的 role 更新)
 │     ├─ review.md        # 审查意见(示例编制中 reviewer 独占,按 P0-P3)
 │     ├─ decisions.md     # 决策记录（共享，只追加，带 [名字 日期]）
 │     └─ rounds/
@@ -25,13 +25,15 @@ docs/agent-collaboration/
 
 ## 文件归属（防冲突）
 
-谁能写、怎么写，由 `team.yaml` 的 `bus.ownership` 定义。原则：**每份文件一个主笔 role，其余只读或只追加**，避免两个 agent 同时改一份文件互相覆盖。详见各模板文件内的注释。
+谁能写、怎么写，由 `team.yaml` 的 `bus.ownership` 定义。原则：**每份文件一个主笔 role，其余只读或只追加**，避免两个 agent 同时改一份文件互相覆盖。
+
+唯一例外是 `handoff.md` 顶部 STATUS 块：当前轮到的 role 完成工作后可以更新这块指挥棒；`handoff.md` 正文仍按 ownership 归属维护。详见各模板文件内的注释。
 
 ## 一轮的生命周期(以 plan-dev-review 示例编制为例)
 
 1. planner 写 `requirements.md` + `plan.md`，按 `handoff.on_done` 把 STATUS 设为 `PLAN_DONE`。
 2. developer 开发，写 `handoff.md`，按 `on_done` 把 STATUS 设为 `DEV_DONE`。
 3. reviewer 审，写 `review.md`，按 `transitions` 选择 `APPROVED` 或 `CHANGES_REQUESTED`。
-5. APPROVED 后：把 plan+handoff+review 快照进 `rounds/round-NN-名字.md`，在 `rounds/INDEX.md` 追加一行，清空当前轮文件迎接下一轮。
+4. APPROVED 后：把 plan+handoff+review 快照进 `rounds/round-NN-名字.md`，在 `rounds/INDEX.md` 追加一行，清空当前轮文件迎接下一轮。
 
 > 如果你的项目用别的角色编制(比如 analyst/pentester/auditor),状态机和文件归属都跟着 team.yaml 走;模板文件名可以沿用、也可以按需在 bus.ownership 里替换为更贴合的名字。

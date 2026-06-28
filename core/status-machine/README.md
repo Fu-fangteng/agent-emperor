@@ -44,10 +44,10 @@ stateDiagram-v2
 ```
 ## STATUS
 状态: DEV_DONE
-轮到: developer (codex)
+轮到: reviewer (cc)
 commit范围: <git 策略；或以下方修改范围圈定>
 涉及仓库: <repos 之一或多个>
-更新: 2026-06-25 by codex
+更新: 2026-06-25 by developer
 ```
 
 接手方读这五行即可定位：在哪一格、自己是不是被点名、要看哪个仓的 diff、谁什么时候改的。

@@ -116,7 +116,21 @@ BUS_SRC="$FRAMEWORK_DIR/core/bus-templates"
 BUS_DST="$TARGET/docs/agent-collaboration"
 if [[ -d "$BUS_SRC" ]]; then
   mkdir -p "$BUS_DST"
-  cp -Rn "$BUS_SRC/." "$BUS_DST/" 2>/dev/null || cp -R "$BUS_SRC/." "$BUS_DST/"
+  (
+    cd "$BUS_SRC"
+    find . -type d -print | while IFS= read -r rel; do
+      mkdir -p "$BUS_DST/$rel"
+    done
+    find . -type f -print | while IFS= read -r rel; do
+      src="$BUS_SRC/$rel"
+      dst="$BUS_DST/$rel"
+      if [[ -e "$dst" ]]; then
+        continue
+      fi
+      mkdir -p "$(dirname "$dst")"
+      cp "$src" "$dst"
+    done
+  )
   echo "[init] ✓ 文件总线就位：${BUS_DST}（已有文件未覆盖）"
 fi
 
