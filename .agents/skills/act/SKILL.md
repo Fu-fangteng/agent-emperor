@@ -9,7 +9,7 @@ description: Use when acting as the currently scheduled worker role in this mult
 
 ## 进来先做
 
-1. 读项目根 `team.yaml`：识别当前 agent（看本窗口常驻配置里声明的 agent 名）担任哪些 roles。
+1. 读项目根 `team.yaml`：识别当前 agent（优先看用户转达 prompt；同工具多 agent 时，常驻配置会列出多个候选）担任哪些 roles。
 2. 读当前 phase 的 `handoff.md` 顶部 STATUS 块：当前状态、轮到哪个 role。
 3. 用 `team.yaml.roles` 建立角色白名单；用 `team.yaml.handoff` 找当前 STATUS 对应的 `next_role`。
 
@@ -36,9 +36,10 @@ description: Use when acting as the currently scheduled worker role in this mult
 干完后更新 `handoff.md` 顶部 STATUS 块：
 
 1. 目标 STATUS 必须来自 `team.yaml.handoff` 中的既有 state。
-2. 「轮到」字段必须是该目标 STATUS 对应的 `next_role`。
-3. 若 `next_role` 不在 `team.yaml.roles` 白名单，或没有任何 agent 认领，立刻停手报错，禁止自创角色。
-4. 若 `next_role: null`，说明流程收尾，不再指向下一个 worker。
+2. 目标 STATUS 的选择必须来自当前状态规则：常规完成用 `on_done`；有分支时按 `transitions[].result/state` 选择；没有声明时必须在交接里说明人工决定依据。
+3. 「轮到」字段必须是目标 STATUS 对应的 `next_role`。
+4. 若 `next_role` 不在 `team.yaml.roles` 白名单，或没有任何 agent 认领，立刻停手报错，禁止自创角色。
+5. 若 `next_role: null`，说明流程收尾，不再指向下一个 worker。
 
 ## 交接
 
@@ -46,9 +47,9 @@ description: Use when acting as the currently scheduled worker role in this mult
 
 ```text
 ✅ 我（<项目/增量> · <我的 role>）的活干完了：<一句话说明产出>。
-👉 请把下面这段复制给 <下一个 role>（新开一个对话）：
+👉 请把下面这段复制给 <下一个 agent / role>（新开一个对话）：
 —————（复制从这里开始）—————
-你是「<项目/增量> · <下一个 role>」。读 team.yaml、START_HERE.md 和当前 handoff.md，
+你是「<项目/增量> · <下一个 role>」（agent: <下一个 agent>）。读 team.yaml、START_HERE.md 和当前 handoff.md，
 确认 STATUS=<目标状态> 且轮到你；然后按你的 role 职责处理。约束：<边界>。
 —————（复制到这里结束）—————
 ```

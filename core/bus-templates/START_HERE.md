@@ -17,7 +17,7 @@
 
 ## 干完活后必做
 
-1. 更新 `handoff.md` 顶部 STATUS 块（状态、轮到谁、更新时间）。「轮到」字段必须来自 `team.yaml.roles` 白名单，禁止自创角色名。
+1. 更新 `handoff.md` 顶部 STATUS 块（状态、轮到谁、更新时间）。目标 STATUS 必须来自当前 `team.yaml.handoff` 规则的 `on_done` 或 `transitions[].state`；「轮到」字段必须来自目标 STATUS 对应的 `next_role`，禁止自创角色名。
 2. **给用户准备一段「转达 prompt」**：告诉下一个 agent 读哪几个文件、做什么、产出什么、最后把 STATUS 设成什么，并把关键约束（边界、不能动的文件）一句话带上。用户会把这段复制到下一个对话。
 3. 在恰当的节点提示用户 commit。
 

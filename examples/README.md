@@ -34,12 +34,15 @@ agents:
     roles: [developer]
 
 handoff:
-  - { state: PLANNING,           next_role: planner,    human_gate: false }
-  - { state: PLAN_REVIEW,        next_role: developer,  human_gate: true  }
-  - { state: PLAN_FEEDBACK,      next_role: planner,    human_gate: true  }
-  - { state: PLAN_DONE,          next_role: developer,  human_gate: true  }
-  - { state: DEV_DONE,           next_role: reviewer,   human_gate: true  }
-  - { state: CHANGES_REQUESTED,  next_role: developer,  human_gate: true  }
+  - { state: PLANNING,           next_role: planner,    human_gate: false, on_done: PLAN_DONE }
+  - { state: PLAN_DONE,          next_role: developer,  human_gate: true,  on_done: DEV_DONE }
+  - state: DEV_DONE
+    next_role: reviewer
+    human_gate: true
+    transitions:
+      - { result: "审查通过", state: APPROVED }
+      - { result: "需要修改", state: CHANGES_REQUESTED }
+  - { state: CHANGES_REQUESTED,  next_role: developer,  human_gate: true,  on_done: DEV_DONE }
   - { state: APPROVED,           next_role: null,       human_gate: true  }
 
 bus:
@@ -74,9 +77,9 @@ roles:
   - { name: auditor,   desc: 独立审查发现项、出报告,       can_write_code: false }
 
 handoff:
-  - { state: SCOPING,       next_role: analyst,   human_gate: false }
-  - { state: SCOPE_DONE,    next_role: pentester, human_gate: true  }
-  - { state: TESTING_DONE,  next_role: auditor,   human_gate: true  }
+  - { state: SCOPING,       next_role: analyst,   human_gate: false, on_done: SCOPE_DONE }
+  - { state: SCOPE_DONE,    next_role: pentester, human_gate: true,  on_done: TESTING_DONE }
+  - { state: TESTING_DONE,  next_role: auditor,   human_gate: true,  on_done: APPROVED }
   - { state: APPROVED,      next_role: null,      human_gate: true  }
 
 bus:
@@ -87,4 +90,4 @@ bus:
     - { file: report.md,   owner: auditor,   write: exclusive }
 ```
 
-关键:`roles`、`handoff.next_role`、`bus.ownership.owner` 这三处的角色名要互相对得上,生成器会校验。
+关键:`roles`、`handoff.next_role`、`handoff.on_done/transitions.state`、`bus.ownership.owner` 这几处要互相对得上,生成器会校验。

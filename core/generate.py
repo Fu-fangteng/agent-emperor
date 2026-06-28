@@ -28,8 +28,8 @@ except ImportError:
 # --------------------------------------------------------------------------
 # 加载与校验
 # --------------------------------------------------------------------------
-KNOWN_TOOLS = {"claude-code", "codex", "cursor"}
-GENERATED_TOOLS = {"claude-code", "codex"}  # cursor 仍是占位，先不生成
+KNOWN_TOOLS = {"claude-code", "codex"}
+GENERATED_TOOLS = KNOWN_TOOLS
 
 # 身份锚点的 10 种预设外壳。{id} 会被替换成「<产品/增量> · <role>」这个身份内核，
 # {emoji} 仅 stamp/cat 用（来自 anchor.role_emoji，缺省 🐾）。
@@ -130,7 +130,10 @@ def validate(team: dict) -> list[str]:
     if role_defs and not any(r.get("can_write_code", False) for r in role_defs.values()):
         warnings.append("没有任何 role 设置 can_write_code: true；这意味着没人被授权修改源代码。")
 
-    # handoff 的 next_role 必须是已声明且被认领的 role（或 null 表示收尾）
+    handoff_states = {h.get("state") for h in handoff if h.get("state")}
+
+    # handoff 的 next_role 必须是已声明且被认领的 role（或 null 表示收尾）；
+    # on_done / transitions 若存在,目标 state 也必须在 handoff 段声明。
     for h in handoff:
         state = h.get("state", "<无 state>")
         nxt = h.get("next_role", "__MISSING__")
@@ -140,6 +143,19 @@ def validate(team: dict) -> list[str]:
             errors.append(f"handoff 规则 state={state} 缺 next_role 字段。")
         elif nxt not in role_set:
             errors.append(f"handoff 规则 state={state} 的 next_role='{nxt}' 未在 roles 声明。")
+        done = h.get("on_done", h.get("next_state", "__ABSENT__"))
+        if done not in ("__ABSENT__", None, "null") and done not in handoff_states:
+            errors.append(f"handoff 规则 state={state} 的 on_done='{done}' 未在 handoff.state 声明。")
+        transitions = h.get("transitions") or []
+        if not isinstance(transitions, list):
+            errors.append(f"handoff 规则 state={state} 的 transitions 必须是列表。")
+        for t in transitions if isinstance(transitions, list) else []:
+            if not isinstance(t, dict):
+                errors.append(f"handoff 规则 state={state} 的 transitions 只能包含 mapping。")
+                continue
+            target = t.get("state")
+            if target not in handoff_states:
+                errors.append(f"handoff 规则 state={state} 的 transition target='{target}' 未在 handoff.state 声明。")
 
     # bus.ownership 的 owner 必须是已声明 role,或特殊关键字 "shared"
     bus = team.get("bus") or {}
@@ -191,15 +207,66 @@ def role_io(team: dict) -> dict[str, dict[str, list[str]]]:
     return io
 
 
-def handoff_for_agent(team: dict, agent: dict) -> list[dict]:
-    """这个 agent 承担的 role 会触发哪些状态翻转。"""
-    my_roles = set(agent.get("roles", []))
+def handoff_for_roles(team: dict, roles: list[str]) -> list[dict]:
+    """这些 role 会触发哪些状态翻转。"""
+    my_roles = set(roles)
     # 当某状态轮到我担任的 role 时，我负责把它推进
     out = []
     for h in team.get("handoff", []):
         if h.get("next_role") in my_roles:
             out.append(h)
     return out
+
+
+def agents_for_tool(team: dict, tool: str) -> list[dict]:
+    return [a for a in team.get("agents", []) if a.get("tool") == tool]
+
+
+def roles_for_agents(agents: list[dict]) -> list[str]:
+    seen: list[str] = []
+    for agent in agents:
+        for role in agent.get("roles", []):
+            if role not in seen:
+                seen.append(role)
+    return seen
+
+
+def agent_names_for_role(agents: list[dict], role: str) -> str:
+    names = [a.get("name", "<未命名>") for a in agents if role in (a.get("roles") or [])]
+    return ", ".join(names) or "未分配"
+
+
+def transition_summary(team: dict, handoff: dict) -> str:
+    """把一条 handoff 规则渲染成清晰的目标 STATUS 说明。"""
+    if handoff.get("next_role") in (None, "null"):
+        return "当前状态是收尾态；不再指向下一个 worker。"
+
+    transitions = handoff.get("transitions")
+    if isinstance(transitions, list) and transitions:
+        parts = []
+        for t in transitions:
+            if not isinstance(t, dict):
+                continue
+            result = t.get("result") or t.get("when") or "完成"
+            state = t.get("state")
+            if state:
+                parts.append(f"{result} → STATUS={state}")
+        if parts:
+            return "完成后按结果选择：" + "；".join(parts) + "。"
+
+    target = handoff.get("on_done") or handoff.get("next_state")
+    if target in (None, "null"):
+        return "完成后流程收尾，不再指向下一个 worker。"
+    if target:
+        return f"完成后把 STATUS 设成 `{target}`。"
+
+    states = [h.get("state") for h in team.get("handoff", [])]
+    try:
+        idx = states.index(handoff.get("state"))
+        fallback = states[idx + 1]
+        return f"完成后通常把 STATUS 设成下一条规则 `{fallback}`；若本轮有分支，请在转达 prompt 里明确目标 STATUS。"
+    except (ValueError, IndexError):
+        return "完成后必须在转达 prompt 里明确目标 STATUS。"
 
 
 def _format_cfgs(team: dict) -> str:
@@ -222,7 +289,7 @@ def anchor_example(team: dict, role: str, product: str) -> str:
     return tmpl.format(id=f"{product} · {role}", emoji=emoji)
 
 
-def render_anchor_lines(team: dict, agent: dict) -> list[str]:
+def render_anchor_lines(team: dict, roles: list[str]) -> list[str]:
     """生成写进适配文件的「身份锚点」指令段。"""
     lines = [
         "## 身份锚点（每轮回复结尾必加）",
@@ -230,7 +297,7 @@ def render_anchor_lines(team: dict, agent: dict) -> list[str]:
         "每轮回复的**最后一行**，固定加一句身份签名。格式：身份内核「<产品/增量> · <role>」套上固定外壳。",
         f"你担任的 role 各举一例（默认产品名来自 project.name：{project_name(team)}；转达 prompt 可临时覆盖）：",
     ]
-    for r in agent.get("roles", []):
+    for r in roles:
         lines.append(f"- {r}：`{anchor_example(team, r, project_name(team))}`")
     lines += [
         "",
@@ -240,7 +307,7 @@ def render_anchor_lines(team: dict, agent: dict) -> list[str]:
     return lines
 
 
-def render_checkin_lines(team: dict, agent: dict) -> list[str]:
+def render_checkin_lines(team: dict) -> list[str]:
     """开场自检：接到转达 prompt 后，第一句先回执身份，证明已就位。"""
     return [
         "## 开场双重硬约束（接到转达 prompt 的第一件事）",
@@ -257,7 +324,7 @@ def render_checkin_lines(team: dict, agent: dict) -> list[str]:
         "> 收到。我是「<产品/增量> · <role>」，已读 START_HERE 和 handoff.md，当前 STATUS=<X>，"
         "确认轮到我，开始干活。",
         "",
-        "- 产品和 role 以转达 prompt 里指定的为准；STATUS 以 handoff.md 顶部为准。",
+        "- 产品、agent 和 role 以转达 prompt 里指定的为准；STATUS 以 handoff.md 顶部为准。",
         f"- 默认产品名是 `{project_name(team)}`；若转达 prompt 指定了增量名，以 prompt 为准。",
     ]
 
@@ -271,9 +338,9 @@ def render_handoff_format_lines(team: dict) -> list[str]:
         "",
         "```",
         "✅ 我（<产品/增量> · <我的 role>）的活干完了：<一句话说清这轮产出>。",
-        "👉 请把下面这段复制给 <下一个 role>（新开一个对话）：",
+        "👉 请把下面这段复制给 <下一个 agent / role>（新开一个对话）：",
         "—————（复制从这里开始）—————",
-        "你是「<产品/增量> · <下一个 role>」。读 <要读的文件>，做 <要做的事>，",
+        "你是「<产品/增量> · <下一个 role>」（agent: <下一个 agent>）。读 <要读的文件>，做 <要做的事>，",
         "产出 <要产出什么>，完成后把 STATUS 设成 <目标状态>。约束：<边界、不能动的文件>。",
         "—————（复制到这里结束）—————",
         "```",
@@ -286,18 +353,25 @@ def render_handoff_format_lines(team: dict) -> list[str]:
 # --------------------------------------------------------------------------
 # 渲染：Codex 的 AGENTS.md
 # --------------------------------------------------------------------------
-def render_agents_md(team: dict, agent: dict) -> str:
+def render_agents_md(team: dict, agents: list[dict]) -> str:
     bus_dir = (team.get("bus") or {}).get("dir", "docs/agent-collaboration")
     io = role_io(team)
     cfgs = _format_cfgs(team)
+    roles = roles_for_agents(agents)
     lines = [
         "# AGENTS.md —— Codex 协作协议（由 team.yaml 生成，勿手改）",
         "",
-        f"你在本仓库参与多 agent 协作开发。你是 agent **{agent.get('name')}**（tool: codex）。",
-        f"你担任的 role：**{', '.join(agent.get('roles', []))}**。",
+        "你在本仓库参与多 agent 协作开发。本文件服务这些 Codex agent：",
+    ]
+    for a in agents:
+        lines.append(f"- **{a.get('name')}**：roles = {', '.join(a.get('roles', []))}")
+    lines += [
+        "",
+        "同一个工具可以开多个独立对话；具体本窗口扮演哪个 agent / role，以用户粘贴的转达 prompt 为准。"
+        "若 prompt 没写清楚，先读 handoff.md 的 STATUS，并让用户切到或声明正确 agent，不要自行猜身份。",
         "",
     ]
-    lines += render_checkin_lines(team, agent)
+    lines += render_checkin_lines(team)
     lines += [
         "",
         "## 进仓库先做",
@@ -307,20 +381,20 @@ def render_agents_md(team: dict, agent: dict) -> str:
         "",
         "## 你各 role 的读写范围",
     ]
-    for r in agent.get("roles", []):
+    for r in roles:
         writes = ", ".join(io.get(r, {}).get("writes", [])) or "（只读）"
         desc = normalize_roles(team).get(r, {}).get("desc")
         desc_part = f"职责：{desc}；" if desc else ""
-        lines.append(f"- **{r}**：{desc_part}写 {writes}；其余总线文件只读；{role_source_permission(team, r)}")
+        lines.append(f"- **{r}**（agent: {agent_names_for_role(agents, r)}）：{desc_part}写 {writes}；其余总线文件只读；{role_source_permission(team, r)}")
     lines += ["", "## 你负责的 STATUS 流转"]
-    hf = handoff_for_agent(team, agent)
+    hf = handoff_for_roles(team, roles)
     if hf:
         for h in hf:
             gate = "（人工把关后）" if h.get("human_gate") else ""
-            lines.append(f"- 当 STATUS={h.get('state')} 轮到你{gate} → 干活 → 完成后翻转到下一状态。")
+            lines.append(f"- 当 STATUS={h.get('state')} 轮到你{gate} → 干活 → {transition_summary(team, h)}")
     else:
         lines.append("- （无：你的 role 不在 handoff 的 next_role 中）")
-    lines += [""] + render_anchor_lines(team, agent)
+    lines += [""] + render_anchor_lines(team, roles)
     lines += [""] + render_handoff_format_lines(team)
     lines += [
         "",
@@ -336,29 +410,43 @@ def render_agents_md(team: dict, agent: dict) -> str:
 # --------------------------------------------------------------------------
 # 渲染：Claude Code 的 CLAUDE.md 协作段
 # --------------------------------------------------------------------------
-def render_claude_md(team: dict, agent: dict) -> str:
+def render_claude_md(team: dict, agents: list[dict]) -> str:
     bus_dir = (team.get("bus") or {}).get("dir", "docs/agent-collaboration")
     io = role_io(team)
     cfgs = _format_cfgs(team)
+    roles = roles_for_agents(agents)
     lines = [
         "<!-- 多 Agent 协作段（由 team.yaml 生成，勿手改此段） -->",
         "# 多 Agent 协作",
         "",
-        f"你是 agent **{agent.get('name')}**（tool: claude-code），担任 role：**{', '.join(agent.get('roles', []))}**。",
+        "本文件服务这些 Claude Code agent：",
+    ]
+    for a in agents:
+        lines.append(f"- **{a.get('name')}**：roles = {', '.join(a.get('roles', []))}")
+    lines += [
         "",
+        "同一个工具可以开多个独立对话；具体本窗口扮演哪个 agent / role，以用户粘贴的转达 prompt 为准。",
         f"开始任何任务前，读 `{bus_dir}/START_HERE.md` 和当前 phase 的 handoff.md STATUS 块，确认是否轮到你。",
         "",
     ]
-    lines += render_checkin_lines(team, agent)
+    lines += render_checkin_lines(team)
     lines += [
         "",
         "## 你各 role 的读写范围",
     ]
-    for r in agent.get("roles", []):
+    for r in roles:
         writes = ", ".join(io.get(r, {}).get("writes", [])) or "（只读）"
         desc = normalize_roles(team).get(r, {}).get("desc")
         desc_part = f"职责：{desc}；" if desc else ""
-        lines.append(f"- **{r}**：{desc_part}写 {writes}；其余总线文件只读；{role_source_permission(team, r)}")
+        lines.append(f"- **{r}**（agent: {agent_names_for_role(agents, r)}）：{desc_part}写 {writes}；其余总线文件只读；{role_source_permission(team, r)}")
+    lines += ["", "## 你负责的 STATUS 流转"]
+    hf = handoff_for_roles(team, roles)
+    if hf:
+        for h in hf:
+            gate = "（人工把关后）" if h.get("human_gate") else ""
+            lines.append(f"- 当 STATUS={h.get('state')} 轮到你{gate} → 干活 → {transition_summary(team, h)}")
+    else:
+        lines.append("- （无：你的 role 不在 handoff 的 next_role 中）")
     lines += [
         "",
         "## 可用触发器（skill）",
@@ -368,7 +456,7 @@ def render_claude_md(team: dict, agent: dict) -> str:
         "- `/sync` —— 读总线对齐状态，告诉用户轮到谁、下一步",
         "",
     ]
-    lines += render_anchor_lines(team, agent)
+    lines += render_anchor_lines(team, roles)
     lines += [""] + render_handoff_format_lines(team)
     lines += [
         "",
@@ -405,17 +493,19 @@ def main() -> int:
     for w in getattr(validate, "warnings", []):
         print(f"[generate] ⚠ {w}")
 
-    # 为每个 agent 生成其工具的适配文件
+    # 为每种工具生成一份适配文件。同一个工具可以有多个 agent,写在同一份
+    # 原生配置里,由转达 prompt 指定本窗口扮演哪个 agent / role。
     planned: list[tuple[Path, str]] = []
-    for agent in team.get("agents", []):
-        tool = agent.get("tool")
+    for tool in sorted({a.get("tool") for a in team.get("agents", [])}):
         if tool not in GENERATED_TOOLS:
-            print(f"[generate] - 跳过 {agent.get('name')}（tool={tool} 暂不生成）")
+            names = ", ".join(a.get("name", "<未命名>") for a in agents_for_tool(team, tool))
+            print(f"[generate] - 跳过 {names}（tool={tool} 暂不生成）")
             continue
+        tool_agents = agents_for_tool(team, tool)
         if tool == "codex":
-            planned.append((target / "AGENTS.md", render_agents_md(team, agent)))
+            planned.append((target / "AGENTS.md", render_agents_md(team, tool_agents)))
         elif tool == "claude-code":
-            planned.append((target / "CLAUDE.md", render_claude_md(team, agent)))
+            planned.append((target / "CLAUDE.md", render_claude_md(team, tool_agents)))
 
     for path, content in planned:
         if args.dry_run:

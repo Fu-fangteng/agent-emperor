@@ -8,7 +8,7 @@ description: Use when a user wants a conversation window to prove it knows its o
 只读不写。用来回答一个问题：**这个对话窗口清不清楚自己在干嘛。** 你随时敲一下，它当场自报家门，证明读到了自己的 role、没丢上下文。
 
 ## 干活
-1. 读项目根 `team.yaml`：本项目名 `project.name`、本项目有哪几个 role、本 agent（看 AGENTS.md 里声明的 agent 名）担任哪些 role、交接逻辑。
+1. 读项目根 `team.yaml`：本项目名 `project.name`、本项目有哪几个 role、本 agent（优先看用户转达 prompt；同工具多 agent 时 AGENTS.md 会列多个候选）担任哪些 role、交接逻辑。
 2. 读当前 phase 的 `handoff.md` 顶部 STATUS 块：当前状态、轮到谁。
 3. 对照判断：当前 STATUS 是否轮到"我"担任的某个 role。
 

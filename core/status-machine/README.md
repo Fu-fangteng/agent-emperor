@@ -13,10 +13,7 @@
 ```mermaid
 stateDiagram-v2
     [*] --> PLANNING
-    PLANNING --> PLAN_REVIEW: planner 写完方案
-    PLAN_REVIEW --> PLAN_FEEDBACK: 下一棒提了异议
-    PLAN_REVIEW --> PLAN_DONE: 无异议
-    PLAN_FEEDBACK --> PLAN_DONE: 人工裁决定稿
+    PLANNING --> PLAN_DONE: planner 写完方案
     PLAN_DONE --> DEV_DONE: developer 开发完
     DEV_DONE --> CHANGES_REQUESTED: reviewer 审出问题
     DEV_DONE --> APPROVED: reviewer 审过
@@ -28,17 +25,15 @@ stateDiagram-v2
 
 ## 状态字段定义
 
-每个状态对应一行 `team.yaml` 的 `handoff` 规则：`state` / `next_role` / `human_gate`。
+每个状态对应一行 `team.yaml` 的 `handoff` 规则：`state` / `next_role` / `human_gate`，并用 `on_done` 或 `transitions` 声明完成后去哪里。
 
-| 状态 | 含义 | 默认 next_role | human_gate | 人工在此做什么 |
-| :--- | :--- | :--- | :--- | :--- |
-| `PLANNING` | 方案撰写中 | planner | false | —（agent 自己写） |
-| `PLAN_REVIEW` | 方案待过目 | developer | true | 切到 dev，让它从实现角度挑坑 |
-| `PLAN_FEEDBACK` | 有异议待裁决 | planner | true | 看两边文字，拍板 |
-| `PLAN_DONE` | 方案定稿 | developer | true | 让 dev 开干 |
-| `DEV_DONE` | 开发完待审 | reviewer | true | 切到 review，说审查触发词 |
-| `CHANGES_REQUESTED` | 被打回待修 | developer | true | 切回 dev，让它看 review 修 |
-| `APPROVED` | 审过 | null | true | 说"归档"，进下一轮 |
+| 状态 | 含义 | next_role | 完成后 |
+| :--- | :--- | :--- | :--- |
+| `PLANNING` | 方案撰写中 | planner | `on_done: PLAN_DONE` |
+| `PLAN_DONE` | 方案定稿 | developer | `on_done: DEV_DONE` |
+| `DEV_DONE` | 开发完待审 | reviewer | `APPROVED` 或 `CHANGES_REQUESTED` |
+| `CHANGES_REQUESTED` | 被打回待修 | developer | `on_done: DEV_DONE` |
+| `APPROVED` | 审过 | null | 收尾 |
 
 > `human_gate=true` 的每个节点 = **审查点 + commit 点 + 交接点**三合一。这是"人工编排"的落点。
 
@@ -64,5 +59,5 @@ commit范围: <git 策略；或以下方修改范围圈定>
 改 `team.yaml` 的 `roles` 和 `handoff` 段即可裁剪：
 
 - **加 tester**：在 `roles` 加 `tester`，在 `handoff` 插入如 `DEV_DONE → tester`（先测）、`TEST_PASSED → reviewer`、`TEST_FAILED → developer`。
-- **去掉 planner**（小改动直接开发）：删 `PLANNING / PLAN_* ` 相关行，让流程从你定义的第一个状态起步，例如 `DEV_READY → developer`。
-- **规则**：每个 `next_role` 必须是 `roles` 里声明过、且被某个 agent 认领的 role。改完重新生成各工具适配文件。
+- **去掉 planner**（小改动直接开发）：删 `PLANNING / PLAN_DONE` 相关行，让流程从你定义的第一个状态起步，例如 `DEV_READY → developer`。
+- **规则**：每个 `next_role` 必须是 `roles` 里声明过、且被某个 agent 认领的 role；每个 `on_done` / `transitions[].state` 必须是 `handoff.state` 里已有的 STATUS。改完重新生成各工具适配文件。

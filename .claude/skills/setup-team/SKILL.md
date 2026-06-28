@@ -1,6 +1,6 @@
 ---
 name: setup-team
-description: Front desk for this multi-agent framework. If team.yaml is missing, registers the team and generates adapters; if team.yaml exists, triages the user's request and prepares a clean handoff prompt for the right worker role.
+description: Front desk for this multi-agent framework. If team.yaml is missing or still the default template, registers the team and generates adapters; if configured, triages the user's request and prepares a clean handoff prompt for the right worker role.
 ---
 
 # setup-team —— 前台 / 通政司
@@ -15,27 +15,31 @@ description: Front desk for this multi-agent framework. If team.yaml is missing,
 - 🚫 绝不自动驱动下一个 worker：只停在“给用户一段 prompt”，由用户复制到新窗口，保留一个 role 一个独立对话。
 - 🚫 无状态、用完即弃：每次从 `team.yaml`、`handoff.md`、总线文件重新读取。
 
-## A. 没有 team.yaml：登记模式
+## A. 未配置：登记模式
 
-一次问清，给推荐值，用户确认后再落盘：
+进入登记模式的条件:
+- 项目根没有 `team.yaml`。
+- `team.yaml` 仍像默认模板：`project.name` 还是 `my-project`，或 `handoff.md` 顶部 STATUS 仍有 `<填入...>` 占位符，或用户明确说“配置团队/初始化/重新登记”。
 
-1. 项目/产品名：写入 `project.name`，作为身份锚点默认产品名。
-2. roles：可从候选开始，也支持用户打字描述后由你解析。
-   - `planner`：写需求、边界、验收标准和实施计划；通常 `can_write_code=false`。
-   - `developer`：修改源代码、运行验证、维护交接；通常 `can_write_code=true`。
-   - `reviewer`：独立审查 diff、测试结果和风险；通常 `can_write_code=false`。
-   - `tester`：运行测试矩阵、复现问题、输出测试报告；通常 `can_write_code=false`。
-   - `release-manager`：整理变更、版本说明、发布检查；通常 `can_write_code=false`。
-   - 自定义：用户可描述“我要一个负责安全审计的角色”，你解析成 role 名、desc、can_write_code。
-3. agents：几个窗口、分别用什么工具（支持 `claude-code`、`codex`，`cursor` 暂占位）。
-4. 每个 agent 担任哪些 roles。
-5. handoff 完整性：问清起点状态、每个状态轮到哪个 role、哪个状态收尾（`next_role: null`）、哪些节点 `human_gate=true`。每个 role 干完要流向哪里必须明确。
-6. bus.ownership 同步:用了非默认角色(没用 planner/developer/reviewer)时,引导用户把 `bus.ownership[].owner` 也改成新角色名,并询问是否要重命名总线文件(`plan.md` → `design.md` 之类),保持语义一致。
-7. anchor.role_emoji 同步:如果用户用了新角色名,提示给新角色挑一只吉祥物(默认会回退到 🐾)。
-8. repos 和 config_files：涉及仓库、受保护配置文件(无可整段留空数组)。
-9. anchor 风格：10 选 1，推荐 `stamp`。
+不要因为 `init.sh` 已经复制了一份默认 `team.yaml` 就直接进入分拣模式；那只是模板，不代表用户已经完成编制。
 
-锚点风格示例：
+优先走“最少提问”的快速配置。默认推荐：
+
+- roles：`planner` / `developer` / `reviewer`
+- handoff：`PLANNING -> PLAN_DONE -> DEV_DONE -> APPROVED`，review 不过则 `CHANGES_REQUESTED -> DEV_DONE`
+- bus：使用默认 `docs/agent-collaboration`
+- anchor：`stamp` 风格，emoji 用默认映射
+- config_files：空数组
+
+首次只问必要信息：
+
+1. 项目/产品名。
+2. 用户开几个 agent、各用什么工具（只支持 `claude-code`、`codex`）。
+3. 每个 agent 担任哪些 roles；如果用户没意见，用 `cc=planner+reviewer`、`codex=developer`。
+
+只有用户明确要自定义时，才展开询问 roles、handoff、bus.ownership、config_files、anchor 风格和 role_emoji。不要把 10 种锚点风格一次性抛给新用户；默认 `stamp` 即可。
+
+锚点风格示例（仅在用户要改风格时展示）：
 
 | id | 示例 |
 | :-- | :-- |
@@ -68,9 +72,9 @@ python3 core/generate.py --team team.yaml --target .
 3. **重命名**:如果 ownership 引用了非默认文件名(如 `design.md` 而非 `plan.md`),问用户是否把对应模板文件 `mv` 过去。
 4. 完成后告诉用户:"配置完成,可以新开一个对话给第一个 worker(<起点 role>),复制以下转达 prompt 起手。" 并产出第一段转达 prompt。
 
-## B. 已有 team.yaml：分拣模式
+## B. 已配置：分拣模式
 
-1. 读 `team.yaml` 和当前 `handoff.md` STATUS。
+1. 读 `team.yaml` 和当前 `handoff.md` STATUS；先按上面的“未配置”条件排除默认模板。
 2. 听用户请求,**先识别意图类型**:
    - **改编制类**(用户说"加个 tester 角色"/"换掉 reviewer"/"我想加 codex"等) → 切回登记模式的 reconfig 子流程:复述当前 team.yaml,问明白具体改什么,改完重跑 generate.py,提醒用户重启已开的 worker 窗口。
    - **开发请求类**(用户描述一个增量或一个具体改动) → 继续走分拣模式下面的步骤。
@@ -79,4 +83,4 @@ python3 core/generate.py --team team.yaml --target .
 5. 检查能力:涉及改代码的请求必须交给 `can_write_code=true` 的 role。
 6. 产出干净转达 prompt,让用户复制到对应 worker 的新窗口。
 
-转达 prompt 必须包含:项目/增量名、目标 role、当前 STATUS、要读的文件、要做的事、禁止越界的边界、完成后依据 `team.yaml.handoff` 指向下一状态。
+转达 prompt 必须包含:项目/增量名、目标 agent/role、当前 STATUS、要读的文件、要做的事、禁止越界的边界、完成后依据 `team.yaml.handoff.on_done` 或 `transitions` 指向哪个目标 STATUS。

@@ -29,10 +29,9 @@ docs/agent-collaboration/
 
 ## 一轮的生命周期(以 plan-dev-review 示例编制为例)
 
-1. planner 写 `requirements.md` + `plan.md`，STATUS → `PLAN_REVIEW`。
-2. developer 过目，异议写进 plan 的「开发方反馈」段；无异议 → `PLAN_DONE`。
-3. developer 开发，写 `handoff.md`，STATUS → `DEV_DONE`。
-4. reviewer 审，写 `review.md`，STATUS → `APPROVED` 或 `CHANGES_REQUESTED`。
+1. planner 写 `requirements.md` + `plan.md`，按 `handoff.on_done` 把 STATUS 设为 `PLAN_DONE`。
+2. developer 开发，写 `handoff.md`，按 `on_done` 把 STATUS 设为 `DEV_DONE`。
+3. reviewer 审，写 `review.md`，按 `transitions` 选择 `APPROVED` 或 `CHANGES_REQUESTED`。
 5. APPROVED 后：把 plan+handoff+review 快照进 `rounds/round-NN-名字.md`，在 `rounds/INDEX.md` 追加一行，清空当前轮文件迎接下一轮。
 
 > 如果你的项目用别的角色编制(比如 analyst/pentester/auditor),状态机和文件归属都跟着 team.yaml 走;模板文件名可以沿用、也可以按需在 bus.ownership 里替换为更贴合的名字。

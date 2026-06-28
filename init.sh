@@ -142,12 +142,14 @@ cat <<'EOF'
 
 [init] 骨架铺设完成。接下来：
   1. 确保依赖：python3 + PyYAML（pip install pyyaml）
-  2. 按自己的项目改 team.yaml（角色、agent、handoff、bus.ownership、config_files、anchor 风格）。
+  2. 用你的 agent 打开项目，运行 /setup-team。
+     - init.sh 复制的 team.yaml 只是默认模板；project.name 仍是 my-project 时，
+       /setup-team 会进入"登记模式"，引导你把编制配齐。
+     - 不想定制时，一路采用默认 plan -> dev -> review 编制即可。
      - 字段注释见 core/team.schema.yaml；样例见 examples/README.md。
-     - 改完 roles 记得同步改 handoff.next_role 和 bus.ownership.owner,保持引用的角色名一致。
-  3. 用你的 agent 打开项目，运行 /setup-team。
-     - 第一次跑会走"登记模式":前台问几个问题,引导你把 team.yaml 配齐,然后生成 CLAUDE.md / AGENTS.md。
-     - 之后每次跑会走"分拣模式":你跟前台说想做什么,它判断该交给哪个 worker。
+     - 改 roles 时,同步检查 handoff.next_role、handoff.on_done/transitions.state
+       和 bus.ownership.owner,保持引用名一致。
+  3. 生成 CLAUDE.md / AGENTS.md 后,关掉旧 worker 窗口再开新对话。
   4. 配置完成后开始第一个增量。
 
 提醒：把 .loop-logs/、.env、本机私密配置加进目标项目的 .gitignore。

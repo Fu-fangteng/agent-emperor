@@ -62,7 +62,7 @@ roles:
 # -----------------------------------------------------------------------------
 # agents: 你实际开几个 AI 客户端，以及每个客户端担任哪些 role。
 #   - name : agent 的标识符（自取，用于交接 prompt 里点名"轮到谁"）。
-#   - tool : 用的工具。已支持 claude-code | codex；cursor 为占位（适配待补）。
+#   - tool : 用的工具。已支持 claude-code | codex。
 #   - roles: 这个 agent 承担的 role 列表（可多个，如 CC 同时 plan+review）。
 #   约束：
 #     * roles 段里出现的每个 role，都必须在顶层 roles 列表里声明。
@@ -80,22 +80,28 @@ agents:
 # -----------------------------------------------------------------------------
 # handoff: 交接逻辑 = STATUS 状态机的"边" = 你说的"节点"。
 #   每条规则表示：当共享文件里的 STATUS 翻到某个 state 时，下一棒交给哪个 role。
-#   - state     : STATUS 值（大写下划线命名）。
-#   - next_role : 该状态下轮到哪个 role 接手；null 表示流程到此收尾（归档）。
-#   - human_gate: 是否需要人工在此节点审查/裁决后才推进（true/false）。
+#   - state      : STATUS 值（大写下划线命名）。
+#   - next_role  : 该状态下轮到哪个 role 接手；null 表示流程到此收尾（归档）。
+#   - human_gate : 是否需要人工在此节点审查/裁决后才推进（true/false）。
 #                 这是"人工编排"的体现：每个 human_gate=true 的节点，
 #                 同时是一个审查点 + commit 点 + 交接点。
+#   - on_done    : 常规完成后要写入 handoff.md 的下一个 STATUS。
+#   - transitions: 有分支时用列表声明可选去向，避免 worker 猜下一状态。
+#                  每项格式：{ result: "无异议", state: PLAN_DONE }。
 #   下方是示例编制（plan → dev → review → 归档）的状态流转。
 #   如果角色不同，状态机也应随之调整，以本段为准。
 # -----------------------------------------------------------------------------
 handoff:
-  - { state: PLANNING,           next_role: planner,    human_gate: false }
-  - { state: PLAN_REVIEW,        next_role: developer,  human_gate: true  }
-  - { state: PLAN_FEEDBACK,      next_role: planner,    human_gate: true  }
-  - { state: PLAN_DONE,          next_role: developer,  human_gate: true  }
-  - { state: DEV_DONE,           next_role: reviewer,   human_gate: true  }
-  - { state: CHANGES_REQUESTED,  next_role: developer,  human_gate: true  }
-  - { state: APPROVED,           next_role: null,       human_gate: true  }
+  - { state: PLANNING,           next_role: planner,    human_gate: false, on_done: PLAN_DONE }
+  - { state: PLAN_DONE,          next_role: developer,  human_gate: true,  on_done: DEV_DONE }
+  - state: DEV_DONE
+    next_role: reviewer
+    human_gate: true
+    transitions:
+      - { result: "审查通过", state: APPROVED }
+      - { result: "需要修改", state: CHANGES_REQUESTED }
+  - { state: CHANGES_REQUESTED,  next_role: developer,  human_gate: true,  on_done: DEV_DONE }
+  - { state: APPROVED,           next_role: null,       human_gate: true }
 
 # -----------------------------------------------------------------------------
 # bus: 文件总线的位置与归属规则（防冲突的核心）。
@@ -157,4 +163,3 @@ anchor:
     planner: 🦝
     developer: 🦫
     reviewer: 🦉
-    tester: 🐹
