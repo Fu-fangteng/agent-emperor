@@ -78,12 +78,15 @@
 ### Step 0. 装框架
 
 ```bash
+# 依赖:python3 + PyYAML
+pip install pyyaml
+
 # 新项目:GitHub 点 "Use this template" 生成新 repo,直接 clone 下来
 # 已有项目:在项目根目录跑
 ./init.sh
 ```
 
-`init.sh` 会铺好骨架:`core/`、`.claude/skills/`、`docs/agent-collaboration/` 总线目录、还有 `team.yaml` 模板。
+`init.sh` 会按 `core/framework-manifest.txt` 清单铺好骨架:`core/`(生成器 + schema + 模板)、`.claude/skills/` + `.agents/skills/`(四个触发器)、`docs/agent-collaboration/` 总线目录、`team.yaml` 默认模板。已存在的文件不覆盖。
 
 ### Step 1. 配团队(每个项目一次)
 
@@ -319,7 +322,6 @@ agent-emperor/
 │  └─ bus-templates/     #   共享文件总线模板
 ├─ .claude/skills/       # Claude Code 触发器:setup-team / act / whoami / sync
 ├─ .agents/skills/       # 上面四个的镜像(给读 .agents 的工具)
-├─ adapters/             # 各工具适配层说明(claude-code / codex / cursor)
 ├─ examples/             # 一个填好 team.yaml 的样例
 ├─ assets/               # 品牌素材(头像 / 横幅 / logo)
 └─ docs/                 # 设计原理(为什么这么做)

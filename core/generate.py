@@ -183,6 +183,14 @@ def handoff_for_agent(team: dict, agent: dict) -> list[dict]:
     return out
 
 
+def _format_cfgs(team: dict) -> str:
+    """渲染 config_files 提示句(完整自然句)。空列表/无声明时给一句更自然的话。"""
+    cfgs = team.get("config_files") or []
+    if cfgs:
+        return f"不擅自改配置文件（{', '.join(cfgs)}），要动走交接说明。"
+    return "本项目未声明受保护配置文件;若有需要列在 team.yaml.config_files。"
+
+
 def anchor_example(team: dict, role: str, product: str) -> str:
     """渲染某个 role 的锚点示例句（身份内核=product · role）。"""
     anchor = team.get("anchor") or {}
@@ -262,7 +270,7 @@ def render_handoff_format_lines(team: dict) -> list[str]:
 def render_agents_md(team: dict, agent: dict) -> str:
     bus_dir = (team.get("bus") or {}).get("dir", "docs/agent-collaboration")
     io = role_io(team)
-    cfgs = ", ".join(team.get("config_files", []) or ["（无）"])
+    cfgs = _format_cfgs(team)
     lines = [
         "# AGENTS.md —— Codex 协作协议（由 team.yaml 生成，勿手改）",
         "",
@@ -300,7 +308,7 @@ def render_agents_md(team: dict, agent: dict) -> str:
         "## 干完必做",
         "1. 更新 handoff.md 顶部 STATUS 块（状态、轮到谁、更新时间）。",
         "2. 按上面的三段式给用户准备「转达 prompt」，指向下一个 agent。",
-        f"3. 不擅自改配置文件（{cfgs}），要动走交接说明。",
+        f"3. {cfgs}",
         "",
     ]
     return "\n".join(lines)
@@ -312,7 +320,7 @@ def render_agents_md(team: dict, agent: dict) -> str:
 def render_claude_md(team: dict, agent: dict) -> str:
     bus_dir = (team.get("bus") or {}).get("dir", "docs/agent-collaboration")
     io = role_io(team)
-    cfgs = ", ".join(team.get("config_files", []) or ["（无）"])
+    cfgs = _format_cfgs(team)
     lines = [
         "<!-- 多 Agent 协作段（由 team.yaml 生成，勿手改此段） -->",
         "# 多 Agent 协作",
@@ -348,7 +356,7 @@ def render_claude_md(team: dict, agent: dict) -> str:
         "## 干完必做",
         "1. 更新 handoff.md 顶部 STATUS 块。",
         "2. 按上面的三段式给用户准备「转达 prompt」指向下一个 agent。",
-        f"3. 不擅自改配置文件（{cfgs}）。一个 role 一个独立对话，保上下文干净。",
+        f"3. {cfgs}一个 role 一个独立对话，保上下文干净。",
         "",
     ]
     return "\n".join(lines)
