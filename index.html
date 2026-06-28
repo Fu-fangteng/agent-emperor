@@ -108,8 +108,8 @@
       inset: 0;
       background:
         radial-gradient(circle at calc(52% + var(--mouse-x, 0) * 18%) calc(42% + var(--mouse-y, 0) * 12%), rgba(var(--green-rgb), .13), transparent 26%),
-        linear-gradient(90deg, rgba(8, 6, 4, .96), rgba(8, 6, 4, .55) 48%, rgba(8, 6, 4, .92)),
-        linear-gradient(180deg, rgba(8, 6, 4, .05), rgba(8, 6, 4, .90));
+        linear-gradient(90deg, rgba(8, 6, 4, .82), rgba(8, 6, 4, .28) 48%, rgba(8, 6, 4, .75)),
+        linear-gradient(180deg, rgba(8, 6, 4, .18), rgba(8, 6, 4, .62));
     }
 
     .cursor-aura {
@@ -433,7 +433,7 @@
       --lane-gap: 12px;
       position: relative;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: var(--lane-gap);
       min-height: 296px;
       margin-bottom: 14px;
@@ -509,8 +509,8 @@
       --lane-index: 0;
       position: absolute;
       bottom: 18px;
-      left: calc((((100% - (var(--lane-gap) * 2)) / 3) + var(--lane-gap)) * var(--lane-index));
-      width: calc((100% - (var(--lane-gap) * 2)) / 3);
+      left: calc((((100% - (var(--lane-gap) * 3)) / 4) + var(--lane-gap)) * var(--lane-index));
+      width: calc((100% - (var(--lane-gap) * 3)) / 4);
       min-height: 48px;
       border: 1px solid rgba(46, 204, 113, .86);
       border-radius: var(--radius);
@@ -734,25 +734,6 @@
       margin-bottom: 7px;
     }
 
-    .anchor-card.current {
-      border-color: rgba(46, 204, 113, .86);
-      box-shadow: 0 0 24px rgba(46, 204, 113, .18), inset 0 0 20px rgba(230, 180, 34, .08);
-    }
-
-    .current-badge {
-      display: inline-flex;
-      align-items: center;
-      min-height: 22px;
-      margin-left: 8px;
-      padding: 1px 7px;
-      border: 1px solid rgba(46, 204, 113, .70);
-      border-radius: 999px;
-      color: var(--green);
-      background: rgba(46, 204, 113, .10);
-      font-size: 11px;
-      vertical-align: middle;
-    }
-
     .anchor-card code {
       display: block;
       color: #e8f0f7;
@@ -845,9 +826,9 @@
         </div>
       </div>
       <h1 class="hero-title" aria-label="Agent 皇帝（Agent Emperor）"><span style="--i:0">Agent</span> <span style="--i:1">皇帝</span><span style="--i:2">（Agent</span> <span style="--i:3">Emperor）</span></h1>
-      <p class="subtitle hero-copy">多 Agent 协作框架</p>
+      <p class="subtitle hero-copy">多 Agent 协作框架 v2</p>
       <div class="intro">
-        <p class="hero-copy">皇帝不是亲自搬砖的人，而是低频编排器：看一眼奏折、复制 prompt、开新对话传旨。规划大臣（planner）、开发大臣（developer）、审查大臣（reviewer）按 STATUS 接力，所有交接都落在文件总线上。</p>
+        <p class="hero-copy">皇帝不是亲自搬砖的人，而是低频编排器：所有想法先交给前台分拣，再由 worker 窗口按角色接力。你只做三件事：看一眼、复制 prompt、开新对话粘贴；上下文、流程记忆和范围约束都落在文件总线上。</p>
         <div class="human-loop hero-copy">
           人在循环里只有三个动作：<strong>看一眼</strong>、<strong>复制 prompt</strong>、<strong>开新对话粘贴</strong>。
         </div>
@@ -872,12 +853,12 @@
           <p>每一步只看 handoff 顶部状态，谁该干活、谁该审查，一眼就能知道。</p>
         </article>
         <article class="feature-card">
-          <b>02 / 文件总线</b>
-          <p>需求、方案、实现交接和审查都落文件，聊天窗口只负责传旨。</p>
+          <b>02 / 前台分拣</b>
+          <p>人只对前台说想法；前台澄清、路由、产出转达 prompt，绝不亲自下场干活。</p>
         </article>
         <article class="feature-card">
-          <b>03 / 人在回路</b>
-          <p>人只做低频把关：看一眼、复制 prompt、开新对话粘贴，让 AI 分角色接力。</p>
+          <b>03 / 文件总线</b>
+          <p>需求、方案、实现交接和审查都落文件，新对话读文件就能接上。</p>
         </article>
       </div>
     </section>
@@ -894,37 +875,114 @@
         <div class="showcase-copy">
           <article class="callout">
             <h3>皇帝只做低频决策</h3>
-            <p>打开文件总线、确认 STATUS、复制下一段 prompt。复杂上下文由不同角色的对话窗口承接。</p>
+            <p>看一眼前台或 worker 给出的交接内容，复制虚线之间的 prompt，开新对话粘给下一位角色。</p>
           </article>
           <article class="callout">
-            <h3>大臣各司其职</h3>
-            <p>规划大臣写契约，开发大臣改代码，审查大臣只看风险和回归。权责不混，交接不乱。</p>
+            <h3>前台不下场</h3>
+            <p><code>/setup-team</code> 只做配置、澄清和路由，产出转达 prompt 后停住，不自动驱动下一棒。</p>
           </article>
           <article class="callout">
             <h3>每次交接都有证据</h3>
             <p>requirements、plan、handoff、review 都在仓库里，审查者不用翻聊天记录。</p>
           </article>
           <article class="callout">
-            <h3>静态页也能讲清流程</h3>
-            <p>本页仍是 file:// 可打开的单文件演示，不读真实 team.yaml 或运行时总线。</p>
+            <h3>协作范式可伸缩</h3>
+            <p>从两角色精简接力到四角色完整流水线，AE 用同一套 STATUS、文件总线和转达 prompt 保持秩序。</p>
           </article>
         </div>
       </div>
     </section>
 
-    <section aria-labelledby="scope-title">
+    <section aria-labelledby="core-roles-title">
       <div class="section-head">
-        <h2 id="scope-title">演示编制说明</h2>
-        <span class="tag">静态教学示例，不读真实总线</span>
+        <h2 id="core-roles-title">三个核心概念</h2>
+        <span class="tag">Front Desk / Worker / 转达 prompt</span>
+      </div>
+      <div class="concepts">
+        <article class="concept">
+          <h3>前台 Front Desk</h3>
+          <p>人唯一打交道的入口。第一次用来配团队；之后接收想法、澄清需求、判断该交给哪个角色。</p>
+          <pre>/setup-team
+配置团队 / 分拣请求 / 产出 prompt
+不写代码、不写方案、不写 review</pre>
+        </article>
+        <article class="concept">
+          <h3>Worker</h3>
+          <p>真正干活的 agent 窗口。每个角色独立对话，先读共享文件和 STATUS，再按职责修改或审查。</p>
+          <pre>/act
+读 team.yaml + handoff.md
+过时序锁 + 能力锁
+靠文件接力，不靠聊天记忆</pre>
+        </article>
+        <article class="concept">
+          <h3>转达 prompt</h3>
+          <p>前台和 worker、worker 和 worker 之间唯一传递物。格式固定，方便人复制到下一扇窗口。</p>
+          <pre>✅ 我（项目 · role）的活干完了...
+👉 请把下面这段复制给 next_role...
+—————（复制从这里开始）—————</pre>
+        </article>
+        <article class="concept">
+          <h3>人工编排</h3>
+          <p>人工节点不是妥协，而是检查点、commit 点和交接点。人掌控节奏，agent 各司其职。</p>
+          <pre>看一眼
+复制 prompt
+开新对话粘贴</pre>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="journey-title">
+      <div class="section-head">
+        <h2 id="journey-title">端到端跑一遍</h2>
+        <span class="tag">配置阶段 → 开发循环 → 收尾归档</span>
       </div>
       <div class="callout-grid">
         <article class="callout">
-          <h3>本可视化的三位大臣 flow</h3>
-          <p>本页用文档里的“登录改版”示例呈现规划大臣（<code>planner</code>）、开发大臣（<code>developer</code>）、审查大臣（<code>reviewer</code>）三段接力。</p>
+          <h3>① 配置阶段</h3>
+          <p>拿到框架后运行 <code>./init.sh</code>，再对前台敲 <code>/setup-team</code>。前台问项目名、角色、工具、角色归属、交接逻辑和身份锚点，生成 <code>team.yaml</code> 与工具适配文件。</p>
+          <pre>./init.sh
+/setup-team
+生成 team.yaml + CLAUDE.md / AGENTS.md
+关掉旧 worker 窗口后再开工</pre>
         </article>
         <article class="callout">
-          <h3>与本仓库当前编制不同</h3>
-          <p>本仓库实际 <code>team.yaml</code> 是精简编制：<code>cc=reviewer</code>、<code>codex=developer</code>，没有独立 planner；规划职责在当前仓库中并入 developer。</p>
+          <h3>② 开发循环</h3>
+          <p>把想法交给前台，前台分拣出转达 prompt；人复制给对应 worker。worker 过两道锁后干活，更新 handoff，再产出下一棒 prompt。</p>
+          <pre>我有个想法
+→ 前台产出 prompt
+→ 新开 worker 对话
+→ worker 干活并交下一棒</pre>
+        </article>
+        <article class="callout">
+          <h3>③ 收尾归档</h3>
+          <p>当状态机走到 <code>next_role: null</code>，本增量收尾。此时是天然提交点，可以 commit 并开启下一轮增量。</p>
+          <pre>STATUS: APPROVED
+轮到: （收尾 / 可合并归档）
+git add . && git commit</pre>
+        </article>
+        <article class="callout">
+          <h3>人的动作始终只有三个</h3>
+          <p>不需要记住所有规则，也不需要在多个 AI 之间搬运长上下文。看状态、复制 prompt、开新对话，就是完整操作面。</p>
+          <pre>1. 看一眼
+2. 复制 prompt
+3. 开新对话粘贴</pre>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="scope-title">
+      <div class="section-head">
+        <h2 id="scope-title">协作编制说明</h2>
+        <span class="tag">产品范式 + 当前落地配置</span>
+      </div>
+      <div class="callout-grid">
+        <article class="callout">
+          <h3>完整范式覆盖四类职责</h3>
+          <p>AE 可以把规划、实现、审查、验收拆给不同角色，让复杂工作在清晰边界内推进。</p>
+        </article>
+        <article class="callout">
+          <h3>本仓库采用精简落地</h3>
+          <p>当前 <code>team.yaml</code> 以 <code>codex=developer</code>、<code>cc=reviewer</code> 运行，规划职责并入 developer；页面动画呈现 AE 可扩展的四角色协作能力。</p>
         </article>
       </div>
     </section>
@@ -932,7 +990,7 @@
     <section aria-labelledby="flow-title">
       <div class="section-head">
         <h2 id="flow-title">协作流程动画</h2>
-        <span class="tag">规划大臣 planner → 开发大臣 developer → 审查大臣 reviewer</span>
+        <span class="tag">planner → developer → reviewer → tester，含打回回环</span>
       </div>
       <div class="flow-grid">
         <div class="stage">
@@ -940,18 +998,23 @@
             <div class="baton" id="baton">PLANNING</div>
             <article class="lane" data-role="planner">
               <div class="lane-role">规划大臣 · planner</div>
-              <small>写 requirements.md / plan.md，把需求拆成可审查的契约。</small>
+              <small>收敛目标、边界和验收口径，把模糊需求变成可执行契约。</small>
               <div class="lane-code">产物: requirements.md, plan.md</div>
             </article>
             <article class="lane" data-role="developer">
               <div class="lane-role">开发大臣 · developer</div>
-              <small>按方案实现短信验证码登录，运行 8 条单测后交接。</small>
-              <div class="lane-code">产物: auth/sms.py, tests/</div>
+              <small>按契约修改源代码、运行验证，并把实现证据写入 handoff.md。</small>
+              <div class="lane-code">产物: 源码 diff, handoff.md</div>
             </article>
             <article class="lane" data-role="reviewer">
               <div class="lane-role">审查大臣 · reviewer</div>
-              <small>审查 diff、风险和测试覆盖，决定批准或打回。</small>
+              <small>只读实现，审查 diff、风险和测试覆盖，决定批准或打回。</small>
               <div class="lane-code">产物: review.md</div>
+            </article>
+            <article class="lane" data-role="tester">
+              <div class="lane-role">验收大臣 · tester</div>
+              <small>执行端到端验收，确认真实浏览器行为和用户路径可靠。</small>
+              <div class="lane-code">产物: acceptance.md</div>
             </article>
           </div>
           <div class="controls" aria-label="流程控制">
@@ -959,7 +1022,7 @@
             <button class="btn" id="prevBtn" type="button">← 上一步</button>
             <button class="btn" id="nextBtn" type="button">下一步 →</button>
             <button class="btn" id="resetBtn" type="button">↺ 重置</button>
-            <span class="tag" id="stepCounter">1 / 6</span>
+            <span class="tag" id="stepCounter">1 / 7</span>
           </div>
         </div>
         <aside class="readout" aria-live="polite">
@@ -980,111 +1043,166 @@
         <span class="tag">与动画当前 STATUS 联动</span>
       </div>
       <div class="graph-wrap">
-        <svg viewBox="0 0 980 310" role="img" aria-label="协作状态机图">
+        <svg viewBox="0 0 1080 330" role="img" aria-label="协作状态机图">
           <defs>
             <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
               <path d="M 0 0 L 10 5 L 0 10 z" fill="#586878"></path>
             </marker>
           </defs>
-          <line class="edge" x1="176" y1="82" x2="274" y2="82"></line>
-          <line class="edge" x1="416" y1="82" x2="514" y2="82"></line>
-          <line class="edge" x1="656" y1="82" x2="754" y2="82"></line>
-          <path class="edge return" d="M 592 132 C 592 228, 354 228, 354 132"></path>
-          <line class="bus-flow" x1="176" y1="82" x2="274" y2="82"></line>
-          <line class="bus-flow" x1="416" y1="82" x2="514" y2="82"></line>
-          <line class="bus-flow" x1="656" y1="82" x2="754" y2="82"></line>
-          <path class="bus-flow" d="M 592 132 C 592 228, 354 228, 354 132"></path>
-          <g class="node" data-status="PLANNING" transform="translate(34 42)">
-            <rect width="142" height="80" rx="8"></rect>
-            <text x="71" y="46" text-anchor="middle">PLANNING</text>
+          <line class="edge" x1="154" y1="82" x2="214" y2="82"></line>
+          <line class="edge" x1="404" y1="82" x2="464" y2="82"></line>
+          <line class="edge" x1="606" y1="82" x2="666" y2="82"></line>
+          <line class="edge" x1="826" y1="82" x2="886" y2="82"></line>
+          <path class="edge return" d="M 535 132 C 535 238, 314 238, 314 132"></path>
+          <line class="bus-flow" x1="154" y1="82" x2="214" y2="82"></line>
+          <line class="bus-flow" x1="404" y1="82" x2="464" y2="82"></line>
+          <line class="bus-flow" x1="606" y1="82" x2="666" y2="82"></line>
+          <line class="bus-flow" x1="826" y1="82" x2="886" y2="82"></line>
+          <path class="bus-flow" d="M 535 132 C 535 238, 314 238, 314 132"></path>
+          <g class="node" data-status="PLANNING" transform="translate(24 42)">
+            <rect width="130" height="80" rx="8"></rect>
+            <text x="65" y="46" text-anchor="middle">PLANNING</text>
           </g>
-          <g class="node" data-status="PLAN_REVIEW" transform="translate(274 42)">
-            <rect width="142" height="80" rx="8"></rect>
-            <text x="71" y="46" text-anchor="middle">PLAN_REVIEW</text>
+          <g class="node" data-status="DEV_IN_PROGRESS" transform="translate(214 42)">
+            <rect width="190" height="80" rx="8"></rect>
+            <text x="95" y="46" text-anchor="middle">DEV_IN_PROGRESS</text>
           </g>
-          <g class="node" data-status="DEV_DONE" transform="translate(514 42)">
+          <g class="node" data-status="DEV_DONE" transform="translate(464 42)">
             <rect width="142" height="80" rx="8"></rect>
             <text x="71" y="46" text-anchor="middle">DEV_DONE</text>
           </g>
-          <g class="node" data-status="APPROVED" transform="translate(754 42)">
+          <g class="node" data-status="QA_PASSED" transform="translate(666 42)">
+            <rect width="160" height="80" rx="8"></rect>
+            <text x="80" y="46" text-anchor="middle">QA_PASSED</text>
+          </g>
+          <g class="node" data-status="APPROVED" transform="translate(886 42)">
             <rect width="142" height="80" rx="8"></rect>
             <text x="71" y="46" text-anchor="middle">APPROVED</text>
           </g>
-          <g class="node" data-status="CHANGES_REQUESTED" transform="translate(236 188)">
+          <g class="node" data-status="CHANGES_REQUESTED" transform="translate(216 196)">
             <rect width="238" height="80" rx="8"></rect>
             <text x="119" y="46" text-anchor="middle">CHANGES_REQUESTED</text>
           </g>
-          <text x="418" y="246" fill="#e6b422" font-size="13">审查没过：朱批打回 developer 修</text>
+          <text x="410" y="258" fill="#e6b422" font-size="13">审查没过：朱批打回 developer 修</text>
         </svg>
       </div>
     </section>
 
     <section aria-labelledby="concept-title">
       <div class="section-head">
-        <h2 id="concept-title">四个核心概念</h2>
-        <span class="tag">真实示例，不读运行时文件</span>
+        <h2 id="concept-title">核心机制</h2>
+        <span class="tag">安全锁、文件真相、身份探测器</span>
       </div>
       <div class="concepts">
         <article class="concept">
           <h3>官职与工具解耦</h3>
-          <p><code>team.yaml</code> 是唯一事实源：agent 名字、工具、role 和 handoff 都从这里生成。下方是本页三角色教学编制；本仓库实际编制见上方说明。</p>
-          <pre>roles: [planner, developer, reviewer]
+          <p><code>team.yaml</code> 是唯一事实源：agent 名字、工具、role、能力锁和 handoff 都从这里生成。</p>
+          <pre>roles:
+  - name: developer
+    can_write_code: true
+  - name: reviewer
+    can_write_code: false
 agents:
   - name: cc
-    roles: [planner, reviewer]
+    roles: [reviewer]
   - name: codex
     roles: [developer]</pre>
         </article>
         <article class="concept">
           <h3>文件总线即奏折</h3>
-          <p>规划、实现、审查都写进总线文件；聊天只负责把下一卷奏折交出去。</p>
+          <p>需求、方案、实现交接和审查都写进总线文件；聊天只负责把下一卷奏折交出去。</p>
           <pre>docs/agent-collaboration/
-  phases/v1/
+  phases/v2/
     requirements.md
     plan.md
     handoff.md
     review.md</pre>
         </article>
         <article class="concept">
-          <h3>一位大臣一个对话</h3>
-          <p>developer 和 reviewer 分开窗口运行，避免同一上下文里自己审自己。</p>
-          <pre>developer:
-  read: plan.md
-  write: handoff.md
-reviewer:
-  read: handoff.md + diff
-  write: review.md</pre>
+          <h3>双重硬约束</h3>
+          <p>每轮开场先核对时序锁和能力锁；没轮到就停，role 不具备写代码权限也停。</p>
+          <pre>时序锁: STATUS 轮到我
+能力锁: can_write_code 允许当前任务</pre>
         </article>
         <article class="concept">
           <h3>身份玉玺</h3>
           <p>每轮结尾固定署名，丢了 role 或产品名就能立刻发现上下文漂移。</p>
-          <pre>⚔️ 以「登录改版 · developer」之名，本轮承诺已兑现。</pre>
+          <pre>🎩 您的「multiagent-workflow-demo · developer」已为您效劳完毕，主人。</pre>
         </article>
       </div>
     </section>
 
     <section aria-labelledby="readme-title">
       <div class="section-head">
-        <h2 id="readme-title">README / 配置怎么读</h2>
-        <span class="tag">上手顺序：README → team.yaml → 生成文件</span>
+        <h2 id="readme-title">触发器速查</h2>
+        <span class="tag">配置 → 干活 → 自检 → 对齐</span>
       </div>
       <div class="callout-grid">
         <article class="callout">
-          <h3>README 负责说明人怎么接力</h3>
-          <p>README 应写清三步：配置团队、生成 agent 指令、按 handoff.md 的 STATUS 串行接力。人不需要记所有规则，只要看状态、复制 prompt、开新对话。</p>
-          <pre>1. 编辑 team.yaml
-2. python3 core/generate.py --team team.yaml --target .
-3. 从 START_HERE.md + handoff.md 开始接力</pre>
+          <h3>/setup-team</h3>
+          <p>你对前台敲。没配过就登记团队并生成配置；配过了就分拣请求，产出转达 prompt。</p>
+          <pre>谁敲: 你（对前台）
+干嘛: 配置 / 分拣 / 产出 prompt</pre>
         </article>
         <article class="callout">
-          <h3>配置文件负责约束 AI 怎么行动</h3>
-          <p><code>team.yaml</code> 定义角色、工具、状态机、文件所有权和身份锚点；生成器把这些规则落成 <code>AGENTS.md</code> / <code>CLAUDE.md</code> 等工具侧指令。</p>
-          <pre>anchor:
-  style: chunni
-bus:
-  ownership:
-    - { file: handoff.md, owner: developer }
-    - { file: review.md, owner: reviewer }</pre>
+          <h3>/act</h3>
+          <p>worker 窗口敲。按 <code>team.yaml</code> 和当前 STATUS，以轮到的角色身份干活，先过两道锁。</p>
+          <pre>谁敲: worker 窗口
+干嘛: 现读角色 / 职责 / 读写范围</pre>
+        </article>
+        <article class="callout">
+          <h3>/whoami</h3>
+          <p>任意窗口敲。当场自检“我担任什么角色、轮没轮到我、当前 STATUS、下一步”。</p>
+          <pre>谁敲: 任意窗口
+干嘛: 自检身份
+性质: 纯只读</pre>
+        </article>
+        <article class="callout">
+          <h3>/sync</h3>
+          <p>任意窗口敲。看全局卡在哪个 STATUS、轮到谁、你该切到哪个 agent。</p>
+          <pre>谁敲: 任意窗口
+干嘛: 全局对齐
+性质: 纯只读</pre>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="modes-title">
+      <div class="section-head">
+        <h2 id="modes-title">进阶能力</h2>
+        <span class="tag">升级父类框架，多产品并行，自定义状态机</span>
+      </div>
+      <div class="callout-grid">
+        <article class="callout">
+          <h3>框架升级</h3>
+          <p>老项目同步 Agent Emperor 新能力时，跑 <code>./init.sh --upgrade /path/to/project</code>。框架层镜像覆盖，实例层绝不触碰，生成层重生。</p>
+          <pre>框架层: core/ + skills 按 manifest 覆盖
+实例层: team.yaml / 业务代码 / phases 不动
+生成层: CLAUDE.md / AGENTS.md 重新生成</pre>
+        </article>
+        <article class="callout">
+          <h3>同时跑多个产品</h3>
+          <p>推荐每个产品独立子目录，各跑一次 <code>init.sh</code> 和 <code>/setup-team</code>，总线物理隔离。共享 codebase 时，用不同 <code>bus.dir</code> 分开。</p>
+          <pre>推荐: product-a/ + product-b/
+共享: docs/agent-collab-p1
+      docs/agent-collab-p2</pre>
+        </article>
+        <article class="callout">
+          <h3>自定义角色</h3>
+          <p><code>planner / developer / reviewer</code> 是默认编制。安全审计可以换成 analyst / pentester / auditor，内容运营可以换成 editor / writer / fact-checker。</p>
+          <pre>roles:
+  - name
+  - desc
+  - can_write_code</pre>
+        </article>
+        <article class="callout">
+          <h3>自定义状态机</h3>
+          <p><code>handoff</code> 定义每个 STATUS 交给哪个角色；<code>next_role: null</code> 表示流程收尾。</p>
+          <pre>handoff:
+  - state: DEV_DONE
+    next_role: reviewer
+  - state: APPROVED
+    next_role: null</pre>
         </article>
       </div>
     </section>
@@ -1092,19 +1210,19 @@ bus:
     <section aria-labelledby="anchor-title">
       <div class="section-head">
         <h2 id="anchor-title">身份锚点的 10 种预设</h2>
-        <span class="tag">当前选用：chunni / current</span>
+        <span class="tag">stamp 为默认风格，内核始终是「产品 · 角色」</span>
       </div>
       <div class="anchors">
-        <article class="anchor-card"><strong>radio</strong><code>📻 这里是「登录改版 · developer」，本轮完毕，over～</code></article>
-        <article class="anchor-card"><strong>stamp</strong><code>—— 🐾「登录改版 · developer」打卡下班，搬砖完毕。</code></article>
-        <article class="anchor-card"><strong>butler</strong><code>🎩 您的「登录改版 · developer」已为您效劳完毕，主人。</code></article>
-        <article class="anchor-card"><strong>save</strong><code>💾 [登录改版 · developer] 进度已保存，等待下一位玩家接棒。</code></article>
-        <article class="anchor-card current"><strong>chunni <span class="current-badge">当前选用 / current</span></strong><code>⚔️ 以「登录改版 · developer」之名，本轮承诺已兑现。</code></article>
-        <article class="anchor-card"><strong>express</strong><code>📦 「登录改版 · developer」专递已送达，请签收～</code></article>
-        <article class="anchor-card"><strong>captain</strong><code>✈️ 机长「登录改版 · developer」播报：本段航程结束，感谢搭乘。</code></article>
-        <article class="anchor-card"><strong>cat</strong><code>🐾 喵——🐾「登录改版 · developer」干完活了，求摸头。</code></article>
-        <article class="anchor-card"><strong>wuxia</strong><code>🥋 在下「登录改版 · developer」，本轮告一段落，告辞。</code></article>
-        <article class="anchor-card"><strong>terminal</strong><code>[登录改版 · developer] $ done ✓ — awaiting next handoff</code></article>
+        <article class="anchor-card"><strong>stamp · 默认</strong><code>—— 🦉「multiagent-workflow-demo · reviewer」打卡下班，搬砖完毕。</code></article>
+        <article class="anchor-card"><strong>radio</strong><code>📻 这里是「multiagent-workflow-demo · developer」，本轮完毕，over~</code></article>
+        <article class="anchor-card"><strong>butler</strong><code>🎩 您的「multiagent-workflow-demo · developer」已为您效劳完毕，主人。</code></article>
+        <article class="anchor-card"><strong>save</strong><code>💾 [multiagent-workflow-demo · developer] 进度已保存，等待下一位玩家接棒。</code></article>
+        <article class="anchor-card"><strong>chunni</strong><code>⚔️ 以「multiagent-workflow-demo · developer」之名，本轮承诺已兑现。</code></article>
+        <article class="anchor-card"><strong>express</strong><code>📦 「multiagent-workflow-demo · developer」专递已送达，请签收~</code></article>
+        <article class="anchor-card"><strong>captain</strong><code>✈️ 机长「multiagent-workflow-demo · developer」播报:本段航程结束,感谢搭乘。</code></article>
+        <article class="anchor-card"><strong>cat</strong><code>🐾 喵——🦉「multiagent-workflow-demo · reviewer」干完活了，求摸头。</code></article>
+        <article class="anchor-card"><strong>wuxia</strong><code>🥋 在下「multiagent-workflow-demo · developer」，本轮告一段落，告辞。</code></article>
+        <article class="anchor-card"><strong>terminal</strong><code>[multiagent-workflow-demo · developer] $ done ✓ — awaiting next handoff</code></article>
       </div>
     </section>
 
@@ -1114,20 +1232,20 @@ bus:
         <button class="btn" id="copyBtn" type="button">复制待复制 prompt</button>
       </div>
       <div class="prompt-layout">
-        <pre>✅ 我（登录改版 · developer）的活干完了：短信验证码登录已实现，8 条单测通过。
+        <pre>✅ 我（multiagent-workflow-demo/v2 · developer）的活干完了：页面叙事已对齐 v2 框架，浏览器回归通过。
 👉 请把下面这段复制给 reviewer（新开一个对话）：
 —————（复制从这里开始）—————
-你是「登录改版 · reviewer」。读 handoff.md、plan.md 和本轮 diff，审查 auth/sms.py 与测试覆盖，产出 review.md，完成后把 STATUS 设成 APPROVED 或 CHANGES_REQUESTED。约束：只写 review.md，不改实现文件。
+你是「multiagent-workflow-demo/v2 · reviewer」。读 team.yaml、START_HERE.md、docs/agent-collaboration/phases/v2/handoff.md、plan.md 和本轮 diff，审查 index.html 的 v2 叙事对齐与视觉/交互回归，产出 review.md，完成后把 STATUS 设成 APPROVED 或 CHANGES_REQUESTED。约束：只写 v2 review.md，不改 index.html，不碰 v1 和配置文件。
 —————（复制到这里结束）—————</pre>
         <div>
-          <textarea id="promptText" class="prompt-copy" readonly>你是「登录改版 · reviewer」。读 handoff.md、plan.md 和本轮 diff，审查 auth/sms.py 与测试覆盖，产出 review.md，完成后把 STATUS 设成 APPROVED 或 CHANGES_REQUESTED。约束：只写 review.md，不改实现文件。</textarea>
+          <textarea id="promptText" class="prompt-copy" readonly>你是「multiagent-workflow-demo/v2 · reviewer」。读 team.yaml、START_HERE.md、docs/agent-collaboration/phases/v2/handoff.md、plan.md 和本轮 diff，审查 index.html 的 v2 叙事对齐与视觉/交互回归，产出 review.md，完成后把 STATUS 设成 APPROVED 或 CHANGES_REQUESTED。约束：只写 v2 review.md，不改 index.html，不碰 v1 和配置文件。</textarea>
           <div class="copy-status" id="copyStatus">按钮会优先使用 Clipboard API；若 file:// 被浏览器限制，则自动选中文本并尝试旧式复制。</div>
         </div>
       </div>
     </section>
   </main>
 
-  <footer class="shell">static demo · zero build · no runtime file access</footer>
+  <footer class="shell">Agent Emperor · file-bus orchestration · human-gated delivery</footer>
 
   <script>
     const steps = [
@@ -1135,47 +1253,54 @@ bus:
         status: "PLANNING",
         activeRole: "planner",
         owner: "planner",
-        caption: "人把“登录改版”需求交给 planner；planner 把模糊目标整理成 requirements.md 和 plan.md。",
-        handoffBlock: "## STATUS\n状态: PLANNING\n轮到: planner\ncommit范围: docs/agent-collaboration/phases/login/requirements.md, plan.md\n涉及仓库: .\n更新: 2026-06-26 by human"
+        caption: "planner 收敛业务目标、风险边界和验收口径，写成可执行契约。",
+        handoffBlock: "## STATUS\n状态: PLANNING\n轮到: planner\ncommit范围: requirements.md, plan.md\n涉及仓库: .\n更新: 2026-06-28 by planner"
       },
       {
-        status: "PLAN_REVIEW",
+        status: "DEV_IN_PROGRESS",
         activeRole: "developer",
         owner: "developer",
-        caption: "planner 交棒；developer 过目方案，在 plan.md「开发方反馈」里写异议或“无异议”。",
-        handoffBlock: "## STATUS\n状态: PLAN_REVIEW\n轮到: developer\ncommit范围: docs/agent-collaboration/phases/login/plan.md\n涉及仓库: .\n更新: 2026-06-26 by planner"
+        caption: "developer 读取契约后修改源代码，运行验证，把实现证据沉淀到 handoff.md。",
+        handoffBlock: "## STATUS\n状态: DEV_IN_PROGRESS\n轮到: developer\ncommit范围: src/**, tests/**, handoff.md\n涉及仓库: .\n更新: 2026-06-28 by developer"
       },
       {
         status: "DEV_DONE",
         activeRole: "developer",
         owner: "reviewer",
-        caption: "developer 实现短信验证码登录，跑完 8 条单测，写 handoff.md 把棒交给 reviewer。",
-        handoffBlock: "## STATUS\n状态: DEV_DONE\n轮到: reviewer\ncommit范围: auth/sms.py, tests/test_sms.py, handoff.md\n涉及仓库: .\n更新: 2026-06-26 by developer"
+        caption: "developer 交棒；reviewer 只读 diff、验证结果和风险说明。",
+        handoffBlock: "## STATUS\n状态: DEV_DONE\n轮到: reviewer\ncommit范围: src/**, tests/**, handoff.md\n涉及仓库: .\n更新: 2026-06-28 by developer"
       },
       {
         status: "CHANGES_REQUESTED",
         activeRole: "reviewer",
         owner: "developer",
-        caption: "reviewer 审 diff 发现 P1：验证码没做频率限制。打回 developer，STATUS 翻回去。",
-        handoffBlock: "## STATUS\n状态: CHANGES_REQUESTED\n轮到: developer\ncommit范围: review.md, handoff.md\n涉及仓库: .\n更新: 2026-06-26 by reviewer"
+        caption: "reviewer 发现 P1/P2 风险，只写 review.md 打回；developer 按意见修复后再次交审。",
+        handoffBlock: "## STATUS\n状态: CHANGES_REQUESTED\n轮到: developer\ncommit范围: review.md, handoff.md\n涉及仓库: .\n更新: 2026-06-28 by reviewer"
       },
       {
         status: "DEV_DONE",
-        activeRole: "developer",
+        activeRole: "reviewer",
+        owner: "tester",
+        caption: "reviewer 复审通过，把实现交给 tester 做真实路径验收。",
+        handoffBlock: "## STATUS\n状态: DEV_DONE\n轮到: tester\ncommit范围: review.md, handoff.md\n涉及仓库: .\n更新: 2026-06-28 by reviewer"
+      },
+      {
+        status: "QA_PASSED",
+        activeRole: "tester",
         owner: "reviewer",
-        caption: "developer 按 review.md 补上频率限制和对应单测，再次交棒 reviewer 复审。",
-        handoffBlock: "## STATUS\n状态: DEV_DONE\n轮到: reviewer\ncommit范围: auth/sms.py, tests/test_sms.py, handoff.md\n涉及仓库: .\n更新: 2026-06-26 by developer"
+        caption: "tester 完成浏览器与端到端路径验收，交回 reviewer 做最终合并判断。",
+        handoffBlock: "## STATUS\n状态: QA_PASSED\n轮到: reviewer\ncommit范围: acceptance.md, handoff.md\n涉及仓库: .\n更新: 2026-06-28 by tester"
       },
       {
         status: "APPROVED",
         activeRole: "reviewer",
-        owner: "human",
-        caption: "reviewer 复审通过：无 P0/P1。STATUS=APPROVED，交回给人做收尾 commit。",
-        handoffBlock: "## STATUS\n状态: APPROVED\n轮到: human\ncommit范围: review.md, handoff.md\n涉及仓库: .\n更新: 2026-06-26 by reviewer"
+        owner: "（收尾 / 可合并归档）",
+        caption: "reviewer 综合代码审查和验收结论批准交付，交回给人做 commit 和归档。",
+        handoffBlock: "## STATUS\n状态: APPROVED\n轮到: （收尾 / 可合并归档）\ncommit范围: src/**, tests/**, docs/agent-collaboration/**\n涉及仓库: .\n更新: 2026-06-28 by reviewer"
       }
     ];
 
-    const roleLaneIndex = { planner: 0, developer: 1, reviewer: 2 };
+    const roleLaneIndex = { planner: 0, developer: 1, reviewer: 2, tester: 3 };
     const lanes = Array.from(document.querySelectorAll(".lane"));
     const nodes = Array.from(document.querySelectorAll(".node"));
     const baton = document.getElementById("baton");
@@ -1230,7 +1355,19 @@ bus:
       render();
     }
 
-    playBtn.addEventListener("click", function () {
+    function guardControlEvent(event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    document.querySelector(".controls").addEventListener("click", function (event) {
+      if (event.target.closest("button")) {
+        event.preventDefault();
+      }
+    }, true);
+
+    playBtn.addEventListener("click", function (event) {
+      guardControlEvent(event);
       if (timer) {
         stop();
         return;
@@ -1239,24 +1376,28 @@ bus:
       timer = setInterval(next, 1700);
     });
 
-    prevBtn.addEventListener("click", function () {
+    prevBtn.addEventListener("click", function (event) {
+      guardControlEvent(event);
       stop();
       currentStep = (currentStep - 1 + steps.length) % steps.length;
       render();
     });
 
-    nextBtn.addEventListener("click", function () {
+    nextBtn.addEventListener("click", function (event) {
+      guardControlEvent(event);
       stop();
       next();
     });
 
-    resetBtn.addEventListener("click", function () {
+    resetBtn.addEventListener("click", function (event) {
+      guardControlEvent(event);
       stop();
       currentStep = 0;
       render();
     });
 
-    copyBtn.addEventListener("click", async function () {
+    copyBtn.addEventListener("click", async function (event) {
+      event.preventDefault();
       const text = promptText.value;
       try {
         if (window.isSecureContext && navigator.clipboard) {
