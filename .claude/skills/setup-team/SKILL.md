@@ -59,12 +59,24 @@ python3 core/generate.py --team team.yaml --target .
 
 若校验报错，按报错修配置，不绕过。
 
+### 收尾:初始化第一个 phase
+
+生成器跑通后,前台还要帮用户**初始化 `docs/agent-collaboration/phases/v1/`**,让用户直接能开干:
+
+1. 读 team.yaml.handoff 的第一条规则,把它的 `state` 和 `next_role` 填进 `phases/v1/handoff.md` 顶部 STATUS 块,替换占位符。其他字段(commit范围/涉及仓库/更新)也补上初始值。
+2. **清理 ownership 不需要的模板**:phases/v1 默认带 requirements.md/plan.md/handoff.md/review.md 4 个模板,如果用户的 team.yaml.bus.ownership 没用到某些(比如精简编制不要 plan.md),问用户是否删除多余模板,避免他后续疑惑。
+3. **重命名**:如果 ownership 引用了非默认文件名(如 `design.md` 而非 `plan.md`),问用户是否把对应模板文件 `mv` 过去。
+4. 完成后告诉用户:"配置完成,可以新开一个对话给第一个 worker(<起点 role>),复制以下转达 prompt 起手。" 并产出第一段转达 prompt。
+
 ## B. 已有 team.yaml：分拣模式
 
 1. 读 `team.yaml` 和当前 `handoff.md` STATUS。
-2. 听用户请求，判断应该交给哪个 role。若请求不清晰，先问一个必要澄清问题。
-3. 检查目标 role 是否在 `team.yaml.roles` 白名单且被 agent 认领。
-4. 检查能力：涉及改代码的请求必须交给 `can_write_code=true` 的 role。
-5. 产出干净转达 prompt，让用户复制到对应 worker 的新窗口。
+2. 听用户请求,**先识别意图类型**:
+   - **改编制类**(用户说"加个 tester 角色"/"换掉 reviewer"/"我想加 codex"等) → 切回登记模式的 reconfig 子流程:复述当前 team.yaml,问明白具体改什么,改完重跑 generate.py,提醒用户重启已开的 worker 窗口。
+   - **开发请求类**(用户描述一个增量或一个具体改动) → 继续走分拣模式下面的步骤。
+3. 听用户请求,判断应该交给哪个 role。若请求不清晰,先问一个必要澄清问题。
+4. 检查目标 role 是否在 `team.yaml.roles` 白名单且被 agent 认领。
+5. 检查能力:涉及改代码的请求必须交给 `can_write_code=true` 的 role。
+6. 产出干净转达 prompt,让用户复制到对应 worker 的新窗口。
 
-转达 prompt 必须包含：项目/增量名、目标 role、当前 STATUS、要读的文件、要做的事、禁止越界的边界、完成后依据 `team.yaml.handoff` 指向下一状态。
+转达 prompt 必须包含:项目/增量名、目标 role、当前 STATUS、要读的文件、要做的事、禁止越界的边界、完成后依据 `team.yaml.handoff` 指向下一状态。

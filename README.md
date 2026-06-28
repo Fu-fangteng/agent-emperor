@@ -104,10 +104,12 @@ pip install pyyaml
 | :-- | :-- |
 | 项目/产品叫什么名 | 一个短名,会成为身份签名里的"产品名" |
 | 用哪几个角色 | 候选:planner / developer / reviewer / tester / release-manager;也可以自定义,比如"安全审计员" |
-| 开了几个 AI、各是什么工具 | 比如"一个 Claude Code、一个 Codex" |
+| 开了几个 AI、各是什么工具 | 比如"一个 Claude Code、一个 Codex";**只有一个 AI 也行**,见下方提示 |
 | 每个 AI 担哪些角色 | 一个 AI 可以兼多个(比如 cc 同时当 planner+reviewer) |
 | 交接逻辑 | 每个状态干完交给谁;前台会**主动追问没想清楚的环节**(比如"reviewer 审完该交回给谁?") |
 | 身份签名风格 | 10 选 1(stamp 打卡 / butler 管家 / chunni 中二 ……见下方[身份锚点](#身份锚点一眼看出-ai-有没有断片)) |
+
+> 💡 **只有一个 AI 也能用**(常见场景:独立开发者只用 Claude Code)。让它一个 agent 兼任所有角色,你**新开不同对话**让它分别扮演 planner / developer / reviewer——CLAUDE.md 是常驻文件,每个新对话起手都会读到双重硬约束 + 当前 STATUS,自然进入对应角色。本质上,"独立对话"靠的是**对话隔离**,不是 agent 隔离。
 
 答完,前台会:
 1. 写出 `team.yaml`(你这个项目的唯一配置文件)

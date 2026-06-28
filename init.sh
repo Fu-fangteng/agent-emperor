@@ -120,6 +120,24 @@ if [[ -d "$BUS_SRC" ]]; then
   echo "[init] ✓ 文件总线就位：${BUS_DST}（已有文件未覆盖）"
 fi
 
+# 4) .gitignore:目标是 git repo 时,追加框架建议忽略的项(已含则跳过)
+if [[ -d "$TARGET/.git" ]]; then
+  GI="$TARGET/.gitignore"
+  touch "$GI"
+  added=0
+  for entry in ".loop-logs/" ".env" "*.env.local"; do
+    if ! grep -qxF "$entry" "$GI" 2>/dev/null; then
+      echo "$entry" >> "$GI"
+      added=1
+    fi
+  done
+  if [[ "$added" == "1" ]]; then
+    echo "[init] ✓ .gitignore 已追加框架建议忽略项(.loop-logs/、.env、*.env.local)"
+  else
+    echo "[init] - .gitignore 已包含框架建议忽略项"
+  fi
+fi
+
 cat <<'EOF'
 
 [init] 骨架铺设完成。接下来：
