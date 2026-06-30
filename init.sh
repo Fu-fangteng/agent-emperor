@@ -10,26 +10,44 @@
 #   ./init.sh /path/to/your/existing/project
 #   ./init.sh                      # 默认铺到当前目录
 #   ./init.sh --upgrade /path/to/project   # 镜像同步框架层 + 删废弃文件
+#   ./init.sh --uninstall /path/to/project # 删除框架层和生成文件，保留 team.yaml 与总线产物
+#   ./init.sh --uninstall --purge-data /path/to/project # 连实例配置与总线产物一并删除
 #
 # 依赖：python3、PyYAML（pip install pyyaml）—— 跑 /setup-team 第三步生成器要用
 #
 set -euo pipefail
 
 FRAMEWORK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-UPGRADE=0
-if [[ "${1:-}" == "--upgrade" ]]; then
-  UPGRADE=1
-  shift
-fi
+MODE="install"
+PURGE_DATA=0
+while [[ "${1:-}" == --* ]]; do
+  case "$1" in
+    --upgrade)
+      MODE="upgrade"
+      shift
+      ;;
+    --uninstall)
+      MODE="uninstall"
+      shift
+      ;;
+    --purge-data)
+      PURGE_DATA=1
+      shift
+      ;;
+    *)
+      echo "[init] 未知参数：$1"; exit 1
+      ;;
+  esac
+done
 TARGET="${1:-$(pwd)}"
 
 if [[ ! -d "$TARGET" ]]; then
   echo "[init] 目标目录不存在：$TARGET"; exit 1
 fi
 
-# 防呆:不允许在框架自身目录铺设(常见误用)。--upgrade 模式合法(就是要更新自己,虽然罕见)。
+# 防呆:不允许在框架自身目录铺设/卸载(常见误用)。--upgrade 模式合法(就是要更新自己,虽然罕见)。
 TARGET_ABS="$(cd "$TARGET" && pwd)"
-if [[ "$UPGRADE" == "0" && "$TARGET_ABS" == "$FRAMEWORK_DIR" ]]; then
+if [[ "$MODE" != "upgrade" && "$TARGET_ABS" == "$FRAMEWORK_DIR" ]]; then
   cat >&2 <<EOF
 [init] ⚠ 看起来你在框架自身目录跑 ./init.sh,这通常是错的。
 [init]   Agent Emperor 是模板,不是项目本身——在父类目录跑 init,所有框架文件
@@ -50,7 +68,68 @@ fi
 echo "[init] 框架源：$FRAMEWORK_DIR"
 echo "[init] 铺设到：$TARGET"
 
-if [[ "$UPGRADE" == "1" ]]; then
+if [[ "$MODE" == "uninstall" ]]; then
+  cat <<'EOF'
+[init] uninstall 模式会删除 Agent Emperor 框架层和生成文件：
+[init]   - core/framework-manifest.txt 清单中的框架文件
+[init]   - .claude/skills/ 与 .agents/skills/ 中的框架触发器
+[init]   - 由生成器产生的 CLAUDE.md / AGENTS.md（仅当文件带生成标记时）
+[init] 默认保留实例层：team.yaml、docs/agent-collaboration/、业务代码和 .gitignore。
+[init] 如需连实例配置与总线产物一并删除，使用 --purge-data。
+EOF
+
+  while IFS= read -r rel || [[ -n "$rel" ]]; do
+    [[ -z "$rel" || "$rel" =~ ^# ]] && continue
+    dst="$TARGET/$rel"
+    if [[ -e "$dst" ]]; then
+      rm -rf "$dst"
+      echo "[init] ✓ 删除 $rel"
+    fi
+  done < "$MANIFEST"
+
+  for generated in "CLAUDE.md" "AGENTS.md"; do
+    path="$TARGET/$generated"
+    if [[ -f "$path" ]]; then
+      if grep -q "由 team.yaml 生成" "$path"; then
+        rm -f "$path"
+        echo "[init] ✓ 删除 $generated"
+      else
+        echo "[init] - 跳过 $generated（未发现生成标记，避免误删用户文件）"
+      fi
+    fi
+  done
+
+  for base in "$TARGET/.claude" "$TARGET/.agents" "$TARGET/core"; do
+    if [[ -d "$base" ]]; then
+      find "$base" -depth -type d | while IFS= read -r dir; do
+        if rmdir "$dir" 2>/dev/null; then
+          echo "[init] ✓ 删除空目录 ${dir#$TARGET/}"
+        fi
+      done
+    fi
+  done
+
+  if [[ "$PURGE_DATA" == "1" ]]; then
+    for rel in "team.yaml" "docs/agent-collaboration"; do
+      if [[ -e "$TARGET/$rel" ]]; then
+        rm -rf "$TARGET/$rel"
+        echo "[init] ✓ 删除实例层 $rel"
+      fi
+    done
+    if [[ -d "$TARGET/docs" ]]; then
+      find "$TARGET/docs" -depth -type d | while IFS= read -r dir; do
+        if rmdir "$dir" 2>/dev/null; then
+          echo "[init] ✓ 删除空目录 ${dir#$TARGET/}"
+        fi
+      done
+    fi
+  fi
+
+  echo "[init] 卸载完成。"
+  exit 0
+fi
+
+if [[ "$MODE" == "upgrade" ]]; then
   cat <<'EOF'
 [init] upgrade 模式会镜像覆盖框架层文件，并删除目标中已废弃的旧框架文件。
 [init] 建议你先 commit 当前工作，便于回滚。实例层文件不会被触碰：

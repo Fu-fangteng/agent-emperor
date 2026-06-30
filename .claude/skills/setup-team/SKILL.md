@@ -37,7 +37,20 @@ description: Front desk for this multi-agent framework. If team.yaml is missing 
 2. 用户开几个 agent、各用什么工具（只支持 `claude-code`、`codex`）。
 3. 每个 agent 担任哪些 roles；如果用户没意见，用 `cc=planner+reviewer`、`codex=developer`。
 
-只有用户明确要自定义时，才展开询问 roles、handoff、bus.ownership、config_files、anchor 风格和 role_emoji。不要把 10 种锚点风格一次性抛给新用户；默认 `stamp` 即可。
+提问时必须补一个可选项：身份锚点默认启用 `stamp` 风格，并写入 `team.yaml`；如果用户想改，可以直接回复风格 id（如 `terminal`、`radio`、`butler`）或说明每个 role 的 emoji。用户不回复则使用默认值。
+
+只有用户明确要自定义时，才展开询问 roles、handoff、bus.ownership、config_files、anchor 风格和 role_emoji。不要把 10 种锚点风格一次性抛给新用户；默认 `stamp` 即可。若用户问有哪些风格，再展示下方表格。
+
+写 `team.yaml` 时，即使采用默认值，也要显式保留 `anchor` 段：
+
+```yaml
+anchor:
+  style: stamp
+  role_emoji:
+    planner: 🦝
+    developer: 🦫
+    reviewer: 🦉
+```
 
 锚点风格示例（仅在用户要改风格时展示）：
 

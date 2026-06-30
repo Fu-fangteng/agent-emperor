@@ -12,7 +12,9 @@
 
 > **Be your agents' emperor.** 把多个 AI 对话组织成一个可检查、可回滚、可接力的开发团队。
 
-Agent Emperor 是一个轻量的多 Agent 协作框架模板。它不追求把所有 AI 自动串起来，而是把协作规则、角色分工、状态流转和交接内容落到项目文件里，让 Claude Code、Codex 等工具能在独立对话中按同一套契约接力。
+Agent Emperor 是一个轻量的多 Agent 协作框架。它不追求把所有 AI 自动串起来，而是把协作规则、角色分工、状态流转和交接内容落到项目文件里，让 Claude Code、Codex 等工具能在独立对话中按同一套契约接力。
+
+本仓库是框架源和官网展示仓库，不是业务项目模板。实际使用时，通过 `init.sh` 把框架层复制到目标项目；目标项目只获得运行协作流程所需的框架文件，不会默认携带官网页面和图片素材。
 
 你在循环里只做三件事：
 
@@ -100,41 +102,38 @@ docs/agent-collaboration/
 python3 -m pip install pyyaml
 ```
 
-### 1. 选择安装方式
+### 1. 安装框架
 
-Agent Emperor 支持两种安装路径：
+使用 `init.sh` 将 Agent Emperor 框架层复制到目标项目。该方式只复制框架运行所需文件，不会把官网页面、图片素材复制到目标项目。
 
-- **新项目**：通过 GitHub **Use this template** 创建仓库。新仓库已包含框架文件，不需要执行 `init.sh`。
-- **已有项目**：先 clone Agent Emperor 仓库，再从该仓库目录执行 `./init.sh /path/to/your/existing-project`，将框架文件复制到已有项目。
-
-#### 新项目：用模板创建
-
-适用于尚未创建业务仓库的场景。
-
-1. 在 GitHub 打开 Agent Emperor 仓库。
-2. 点击 **Use this template**。
-3. 创建新项目仓库。
-4. clone 新项目仓库：
+#### 新项目
 
 ```bash
 git clone https://github.com/<you>/<your-new-project>.git
 cd <your-new-project>
 ```
 
-进入新项目仓库后，继续执行下一节“配置团队”。此路径不需要执行 `init.sh`。
-
-#### 已有项目：用 init.sh 加装
-
-适用于已经存在业务项目、需要加装 Agent Emperor 框架的场景。
-
-clone Agent Emperor 仓库：
+在另一个目录获取 Agent Emperor 框架源：
 
 ```bash
 git clone https://github.com/Fu-fangteng/agent-emperor.git
 cd agent-emperor
 ```
 
-将框架复制到已有项目：
+将框架层复制到新项目：
+
+```bash
+./init.sh /path/to/your-new-project
+```
+
+#### 已有项目
+
+```bash
+git clone https://github.com/Fu-fangteng/agent-emperor.git
+cd agent-emperor
+```
+
+将框架层复制到已有项目：
 
 ```bash
 ./init.sh /path/to/your/existing-project
@@ -142,14 +141,18 @@ cd agent-emperor
 
 禁止在 Agent Emperor 仓库自身直接执行 `./init.sh`；该仓库是模板源，不是目标业务项目。
 
-`init.sh` 会复制这些框架文件到目标项目：
+`init.sh` 只复制这些框架文件到目标项目：
 
 - `core/`：schema、生成器、总线模板。
 - `.claude/skills/` 和 `.agents/skills/`：四个触发器。
 - `docs/agent-collaboration/`：文件总线初始模板。
 - `team.yaml`：默认编制模板。
 
-已有文件不会被覆盖。
+已有文件不会被覆盖。官网文件不会被复制，包括 `index.html`、`assets/`、`logo*.webp/png`、`avatar*.webp`、`bg*.webp`。
+
+#### 可选：复制完整官网/demo
+
+GitHub **Use this template** 会复制整个仓库，包含官网页面和图片素材。仅在需要保留官网/demo 文件时使用该方式；普通业务项目推荐使用 `init.sh`。
 
 ### 2. 配置团队
 
@@ -174,7 +177,7 @@ cd agent-emperor
 - 每个 agent 担任哪些 role。
 - 是否采用默认 plan -> dev -> review 流程。
 
-文件总线 ownership、受保护配置文件和身份锚点风格都有默认值；只有你要自定义时才需要改。
+文件总线 ownership、受保护配置文件和身份锚点风格都有默认值；只有需要自定义时才需要改。`/setup-team` 默认启用 `stamp` 身份锚点，并写入 `team.yaml`；如需调整，可在登记时指定锚点风格或 role emoji。
 
 确认后它会运行：
 
@@ -367,9 +370,11 @@ python3 core/generate.py --team team.yaml --target .
 
 这是能力锁。独立审查的价值在于只读源码、写 review。如果 reviewer 发现问题，应把 STATUS 打回 developer。
 
-### 可以删除官网文件吗
+### 官网文件会进入业务项目吗
 
-可以。仓库根的 `index.html`、`logo*.webp`、`avatar*.webp`、`bg*.webp` 是 Agent Emperor 自己的展示页素材，不是框架运行必需文件。把框架装进你的业务项目后，不需要保留这些官网素材。
+使用 `init.sh` 安装时不会。`index.html`、`assets/`、`logo*.webp/png`、`avatar*.webp`、`bg*.webp` 只属于 Agent Emperor 官网/demo，不是框架运行必需文件。
+
+只有通过 GitHub **Use this template** 复制完整仓库时，这些官网文件才会进入新仓库；如业务项目不需要官网/demo，可以删除它们。
 
 ## 升级已有项目
 
@@ -399,6 +404,34 @@ python3 core/generate.py --team team.yaml --target .
 ```
 
 再重启旧 worker 对话。
+
+## 卸载框架
+
+从目标项目移除 Agent Emperor 框架层：
+
+```bash
+./init.sh --uninstall /path/to/your/project
+```
+
+默认只删除框架文件和生成文件：
+
+- `core/`
+- `.claude/skills/`
+- `.agents/skills/`
+- 带生成标记的 `CLAUDE.md` / `AGENTS.md`
+
+默认保留实例数据：
+
+- `team.yaml`
+- `docs/agent-collaboration/`
+- 业务代码
+- `.gitignore`
+
+如果需要连实例配置和协作总线产物一并删除：
+
+```bash
+./init.sh --uninstall --purge-data /path/to/your/project
+```
 
 ## 仓库结构
 
