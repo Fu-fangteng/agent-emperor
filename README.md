@@ -4,6 +4,12 @@
   <img src="assets/banner.png" alt="Agent Emperor - Be your agents' emperor" width="100%">
 </p>
 
+<p align="center">
+  <a href="https://fu-fangteng.github.io/agent-emperor/"><strong>官网</strong></a>
+  ·
+  <a href="https://github.com/Fu-fangteng/agent-emperor"><strong>GitHub 仓库</strong></a>
+</p>
+
 > **Be your agents' emperor.** 把多个 AI 对话组织成一个可检查、可回滚、可接力的开发团队。
 
 Agent Emperor 是一个轻量的多 Agent 协作框架模板。它不追求把所有 AI 自动串起来，而是把协作规则、角色分工、状态流转和交接内容落到项目文件里，让 Claude Code、Codex 等工具能在独立对话中按同一套契约接力。
