@@ -100,19 +100,49 @@ docs/agent-collaboration/
 python3 -m pip install pyyaml
 ```
 
-### 1. 安装到你的项目
+### 1. 选择安装方式
 
-不要在 Agent Emperor 仓库自身里直接跑初始化。这个仓库是模板。
+Agent Emperor 支持两种安装路径：
 
-已有项目：
+- **新项目**：通过 GitHub **Use this template** 创建仓库。新仓库已包含框架文件，不需要执行 `init.sh`。
+- **已有项目**：先 clone Agent Emperor 仓库，再从该仓库目录执行 `./init.sh /path/to/your/existing-project`，将框架文件复制到已有项目。
+
+#### 新项目：用模板创建
+
+适用于尚未创建业务仓库的场景。
+
+1. 在 GitHub 打开 Agent Emperor 仓库。
+2. 点击 **Use this template**。
+3. 创建新项目仓库。
+4. clone 新项目仓库：
 
 ```bash
-./init.sh /path/to/your/project
+git clone https://github.com/<you>/<your-new-project>.git
+cd <your-new-project>
 ```
 
-新项目可以用 GitHub 的 “Use this template”，或先 clone 后把框架铺到目标项目。
+进入新项目仓库后，继续执行下一节“配置团队”。此路径不需要执行 `init.sh`。
 
-`init.sh` 会复制：
+#### 已有项目：用 init.sh 加装
+
+适用于已经存在业务项目、需要加装 Agent Emperor 框架的场景。
+
+clone Agent Emperor 仓库：
+
+```bash
+git clone https://github.com/Fu-fangteng/agent-emperor.git
+cd agent-emperor
+```
+
+将框架复制到已有项目：
+
+```bash
+./init.sh /path/to/your/existing-project
+```
+
+禁止在 Agent Emperor 仓库自身直接执行 `./init.sh`；该仓库是模板源，不是目标业务项目。
+
+`init.sh` 会复制这些框架文件到目标项目：
 
 - `core/`：schema、生成器、总线模板。
 - `.claude/skills/` 和 `.agents/skills/`：四个触发器。
@@ -123,13 +153,13 @@ python3 -m pip install pyyaml
 
 ### 2. 配置团队
 
-在目标项目根目录打开你的 AI 工具，运行：
+在目标项目根目录打开 AI 工具，运行：
 
 ```text
 /setup-team
 ```
 
-`init.sh` 会复制一份默认 `team.yaml`，但这不代表项目已经配置完成。`/setup-team` 会把以下情况视为“未配置”，进入登记模式：
+无论是通过模板创建新项目，还是通过 `init.sh` 加装到已有项目，目标项目里都会有一份默认 `team.yaml`。默认文件不代表配置已完成；`/setup-team` 会把以下情况视为“未配置”，进入登记模式：
 
 - 没有 `team.yaml`。
 - `team.yaml.project.name` 仍是 `my-project`。
